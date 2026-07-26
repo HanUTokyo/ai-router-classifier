@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # ========================================
+  # 📊 Prometheus - 数据收集
+  # ========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-llm
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - llm-monitoring
+
+  # ========================================
+  # 📈 Grafana - 可视化
+  # ========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-llm
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana-provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - llm-monitoring
+
+networks:
+  llm-monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
