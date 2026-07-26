@@ -1,0 +1,149 @@
+version: "1.2.0"
+rules:
+  - id: code-explicit-cn
+    label: code
+    kind: hard
+    pattern_type: regex
+    pattern: '(写|编写|生成|修改|重构|调试|修复|实现).{0,16}(代码|程序|脚本|函数|接口|SQL|API)'
+    weight: 1.0
+    enabled: true
+
+  - id: code-error-cn
+    label: code
+    kind: hard
+    pattern_type: regex
+    pattern: '(代码|程序|脚本|函数|接口|Python|Java|SQL|API).{0,16}(报错|错误|异常|bug|失败)'
+    weight: 1.0
+    enabled: true
+
+  - id: code-artifact-action-cn
+    label: code
+    kind: hard
+    pattern_type: regex
+    pattern: '(代码|程序|脚本|函数|接口|Python|Java|SQL|API).{0,20}(怎么改|如何修|修复|调试|重构|优化)'
+    weight: 1.0
+    enabled: true
+
+  - id: code-explicit-en
+    label: code
+    kind: hard
+    pattern_type: regex
+    pattern: '(?i)\b(write|implement|debug|fix|refactor|generate)\b.{0,48}\b(code|function|script|api|sql|query|program)\b'
+    weight: 1.0
+    enabled: true
+
+  - id: code-artifact-action-en
+    label: code
+    kind: hard
+    pattern_type: regex
+    pattern: '(?i)\b(code|function|script|api|sql(?:\s+query)?|program)\b.{0,48}\b(fix|debug|modify|refactor|implement|optimize)\b'
+    weight: 1.0
+    enabled: true
+
+  - id: code-sql-statement
+    label: code
+    kind: hard
+    pattern_type: regex
+    pattern: '(?i)^\s*(select|insert|update|delete|with)\b.{3,}'
+    weight: 1.0
+    enabled: true
+
+  - id: reason-explicit-cn
+    label: reason
+    kind: hard
+    pattern_type: regex
+    pattern: '(为什么|请证明|证明一下|分析.{0,8}原因|逻辑推理|推理过程)'
+    weight: 1.0
+    enabled: true
+
+  - id: reason-explicit-en
+    label: reason
+    kind: hard
+    pattern_type: regex
+    pattern: '(?i)\b(why|prove|reason through|analy[sz]e the (cause|reason))\b'
+    weight: 1.0
+    enabled: true
+
+  - id: chat-greeting-cn
+    label: chat
+    kind: hard
+    pattern_type: regex
+    pattern: '^\s*(你好|您好|嗨|早上好|下午好|晚上好)[！!。.]*\s*$'
+    weight: 1.0
+    enabled: true
+
+  - id: chat-greeting-en
+    label: chat
+    kind: hard
+    pattern_type: regex
+    pattern: '(?i)^\s*(hi|hello|hey|good (morning|afternoon|evening))[!. ]*\s*$'
+    weight: 1.0
+    enabled: true
+
+  - id: chat-joke-cn
+    label: chat
+    kind: hard
+    pattern_type: regex
+    pattern: '^\s*(讲|说).{0,4}(笑话|故事)[吧。！!]*\s*$'
+    weight: 1.0
+    enabled: true
+
+  - id: weak-code-tech-en
+    label: code
+    kind: weak
+    pattern_type: token
+    pattern: 'python|java|sql|api|fastapi|docker|javascript|typescript|rust|golang'
+    exclusions:
+      - '(?i)\bpython\b.{0,12}(?:\bsnake\b|这种蛇)'
+      - '(?i)\bjava\b.{0,12}(?:\bisland\b|岛)'
+      - '(?i)\bapi\b.{0,24}(?:\bstand for\b|\babbreviation\b|缩写|含义|意思)'
+    weight: 0.7
+    enabled: true
+
+  - id: weak-code-cn
+    label: code
+    kind: weak
+    pattern_type: regex
+    pattern: '(代码|编程|报错|数据库|函数|接口|开发环境|单元测试)'
+    weight: 0.8
+    enabled: true
+
+  - id: weak-code-action
+    label: code
+    kind: weak
+    pattern_type: regex
+    pattern: '(调试|重构|部署|编译|执行|查询语句|技术实现)'
+    weight: 0.8
+    enabled: true
+
+  - id: weak-reason-cn
+    label: reason
+    kind: weak
+    pattern_type: regex
+    pattern: '(原因|逻辑|推理|证明|分析|比较利弊|如何判断)'
+    weight: 0.8
+    enabled: true
+
+  - id: weak-reason-en
+    label: reason
+    kind: weak
+    pattern_type: token
+    pattern: 'why|reason|prove|analyze|analyse|logic|deduce|compare'
+    weight: 0.8
+    enabled: true
+
+  - id: weak-chat-cn
+    label: chat
+    kind: weak
+    pattern_type: regex
+    pattern: '(你好|聊天|笑话|天气|推荐|介绍一下|谢谢|再见)'
+    weight: 0.6
+    enabled: true
+
+  - id: weak-chat-en
+    label: chat
+    kind: weak
+    pattern_type: token
+    pattern: 'hello|hi|chat|joke|weather|recommend|thanks|bye'
+    weight: 0.6
+    enabled: true

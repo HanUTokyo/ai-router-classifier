@@ -14,6 +14,7 @@ logs/
 router/logs/
 memory/
 backups/
+artifacts/
 data/feedback*.jsonl
 data/review_queue.jsonl
 
@@ -22,6 +23,11 @@ router/rule_missing.jsonl
 router/rules_patch.txt
 router/tfidf_scores.json
 router/training_data.jsonl
+legacy/router_v1/rule_candidates.yaml
+legacy/router_v1/rule_missing.jsonl
+legacy/router_v1/rules_patch.txt
+legacy/router_v1/tfidf_scores.json
+legacy/router_v1/training_data.jsonl
 
 .env
 .env.*

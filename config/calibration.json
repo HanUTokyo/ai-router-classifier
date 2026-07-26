@@ -1,0 +1,14 @@
+{
+  "version": "unvalidated",
+  "validated": false,
+  "classifier_model": null,
+  "classifier_version": null,
+  "prompt_version": null,
+  "rule_version": null,
+  "hard_rules_enabled": false,
+  "hard_rule_precision": null,
+  "weak_fallback_enabled": false,
+  "weak_fallback_threshold": null,
+  "weak_fallback_margin": null,
+  "precision": {}
+}

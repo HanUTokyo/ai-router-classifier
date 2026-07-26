@@ -1,0 +1,47 @@
+version: "1.0"
+
+server:
+  host: "127.0.0.1"
+  port: 8000
+  api_key: ""
+
+ollama:
+  base_url: "http://127.0.0.1:11434"
+  connect_timeout_seconds: 3.0
+  read_timeout_seconds: 120.0
+  stream_timeout_seconds: 300.0
+
+classifier:
+  version: "1.0.0"
+  model: "qwen2.5:0.5b"
+  candidates:
+    - "qwen3:0.6b"
+    - "qwen2.5:0.5b"
+    - "gemma3:1b"
+  prompt_version: "classifier-v5"
+  rules_path: "config/rules.yaml"
+  calibration_path: "config/calibration.json"
+  weak_fallback_threshold: 2.0
+  weak_fallback_margin: 0.75
+  max_model_attempts: 2
+  strict_model_check: true
+
+gateway:
+  public_model_id: "local-router"
+  think: false
+  chat_model: "gemma4:e4b"
+  reason_model: "deepseek-r1:8b"
+  code_model: "deepseek-coder:6.7b"
+  tool_model: "gemma4:e4b"
+  tool_supported_models: []
+
+storage:
+  feedback_path: "data/feedback.jsonl"
+  review_queue_path: "data/review_queue.jsonl"
+  capture_review_text: true
+  memory_enabled: false
+  memory_path: "data/memory.md"
+
+logging:
+  level: "INFO"
+  include_content: false
