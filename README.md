@@ -8,6 +8,7 @@
 4. 薄 Gateway 根据分类结果调用回答模型。
 
 旧实现完整保存在 `legacy/`，运行时不再依赖它。
+当前已验证内容与尚未完成的上线闸门见 [VALIDATION.md](VALIDATION.md)。
 
 ## 快速开始
 

@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 
 from .classifier import RouterClassifier
-from .ollama import OllamaClient
+from .ollama import OllamaClient, OllamaError
 from .settings import Settings
 from .storage import ExplicitMemory
 from .types import Message, RouteDecision
@@ -51,13 +51,17 @@ class ThinGateway:
         max_tokens: int | None = None,
     ) -> GatewayResult:
         decision, model, prepared = await self._prepare(messages, tools)
-        upstream = await self.ollama.chat(
-            model=model,
-            messages=prepared,
-            options=_options(temperature, top_p, max_tokens),
-            tools=tools,
-            think=self.settings.gateway.think,
-        )
+        try:
+            upstream = await self.ollama.chat(
+                model=model,
+                messages=prepared,
+                options=_options(temperature, top_p, max_tokens),
+                tools=tools,
+                think=self.settings.gateway.think,
+            )
+        except OllamaError as exc:
+            exc.selected_model = model
+            raise
         return GatewayResult(
             decision=decision,
             selected_model=model,
@@ -74,13 +78,17 @@ class ThinGateway:
         max_tokens: int | None = None,
     ) -> GatewayStream:
         decision, model, prepared = await self._prepare(messages, tools)
-        upstream = await self.ollama.open_chat_stream(
-            model=model,
-            messages=prepared,
-            options=_options(temperature, top_p, max_tokens),
-            tools=tools,
-            think=self.settings.gateway.think,
-        )
+        try:
+            upstream = await self.ollama.open_chat_stream(
+                model=model,
+                messages=prepared,
+                options=_options(temperature, top_p, max_tokens),
+                tools=tools,
+                think=self.settings.gateway.think,
+            )
+        except OllamaError as exc:
+            exc.selected_model = model
+            raise
         return GatewayStream(
             decision=decision,
             selected_model=model,

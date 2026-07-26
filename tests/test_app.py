@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 
 import httpx
 import pytest
@@ -88,6 +89,30 @@ def test_route_and_openai_non_stream(settings):
     assert calls[-1]["model"] == "gemma4:e4b"
 
 
+def test_blank_route_message_is_rejected(settings):
+    transport, _ = mock_transport()
+    app = create_app(settings, transport=transport)
+
+    with TestClient(app) as client:
+        response = client.post("/route", json={"message": "   "})
+
+    assert response.status_code == 422
+
+
+def test_external_request_id_is_not_reused(settings):
+    transport, _ = mock_transport()
+    app = create_app(settings, transport=transport)
+
+    with TestClient(app) as client:
+        response = client.get(
+            "/health/live",
+            headers={"X-Request-ID": "user@example.com"},
+        )
+
+    assert response.headers["x-request-id"] != "user@example.com"
+    uuid.UUID(response.headers["x-request-id"])
+
+
 def test_startup_refuses_missing_required_model(settings):
     strict = settings.model_copy(
         update={
@@ -125,6 +150,7 @@ def test_api_key_protects_non_health_endpoints(settings):
         live = client.get("/health/live")
 
     assert denied.status_code == 401
+    uuid.UUID(denied.headers["x-request-id"])
     assert allowed.status_code == 200
     assert live.status_code == 200
 
@@ -248,6 +274,29 @@ def test_feedback_is_secure_and_responses_api_is_explicit(settings):
     assert unsupported.status_code == 501
     assert "/v1/responses" not in schema.json()["paths"]
     assert os.stat(settings.storage.feedback_path).st_mode & 0o777 == 0o600
+
+
+def test_ask_alias_has_deprecation_headers(settings):
+    transport, _ = mock_transport()
+    app = create_app(settings, transport=transport)
+
+    with TestClient(app) as client:
+        response = client.post("/ask", json={"message": "hello"})
+
+    assert response.status_code == 200
+    assert response.headers["deprecation"] == "true"
+    assert response.headers["sunset"] == "Thu, 01 Oct 2026 00:00:00 GMT"
+    assert response.headers["link"] == (
+        '</v1/chat/completions>; rel="successor-version"'
+    )
+
+    failing_transport, _ = mock_transport(fail_answer=True)
+    failing_app = create_app(settings, transport=failing_transport)
+    with TestClient(failing_app) as client:
+        failed = client.post("/ask", json={"message": "hello"})
+
+    assert failed.status_code == 502
+    assert failed.headers["deprecation"] == "true"
 
 
 def test_tools_use_tool_model_and_unsupported_contract_is_rejected(settings):

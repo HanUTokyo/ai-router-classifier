@@ -10,7 +10,7 @@ from .types import RouteLabel, SmallModelOutput
 
 
 class OllamaError(RuntimeError):
-    pass
+    selected_model: str | None = None
 
 
 class OllamaTimeout(OllamaError):

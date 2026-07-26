@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class RouteLabel(str, Enum):
@@ -36,6 +36,13 @@ class RouteRequest(BaseModel):
     message: str = Field(min_length=1, max_length=10_000)
     context: list[Message] = Field(default_factory=list, max_length=6)
 
+    @field_validator("message")
+    @classmethod
+    def require_nonempty_message(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("message must not be blank")
+        return value
+
 
 class RuleHit(BaseModel):
     rule_id: str
@@ -62,6 +69,13 @@ class FeedbackRequest(BaseModel):
     actual_route: RouteLabel | None = None
     tags: list[str] = Field(default_factory=list, max_length=20)
     comment: str | None = Field(default=None, max_length=2_000)
+
+    @field_validator("message")
+    @classmethod
+    def require_nonempty_message(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("message must not be blank")
+        return value
 
 
 class SmallModelOutput(BaseModel):

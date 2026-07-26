@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hmac
 import json
 import time
@@ -10,10 +11,10 @@ from typing import Any, AsyncIterator
 import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .classifier import RouterClassifier
-from .gateway import GatewayResult, GatewayStream, ThinGateway
+from .gateway import GatewayResult, ThinGateway
 from .observability import (
     active_requests,
     configure_logging,
@@ -34,6 +35,13 @@ from .types import FeedbackRequest, Message, RouteRequest
 
 class AskRequest(BaseModel):
     message: str = Field(min_length=1, max_length=10_000)
+
+    @field_validator("message")
+    @classmethod
+    def require_nonempty_message(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("message must not be blank")
+        return value
 
 
 class OpenAIChatRequest(BaseModel):
@@ -87,7 +95,8 @@ def create_app(
 
     @app.middleware("http")
     async def security_and_request_log(request: Request, call_next):
-        request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
+        request_id = str(uuid.uuid4())
+        started = time.perf_counter()
         request.state.request_id = request_id
         if selected.server.api_key and request.url.path not in {
             "/health",
@@ -98,13 +107,29 @@ def create_app(
                 supplied,
                 selected.server.api_key,
             ):
-                return _error_response(
+                response = _error_response(
                     401,
                     "Invalid or missing API key",
                     "authentication_error",
                     "invalid_api_key",
                 )
-        started = time.perf_counter()
+                http_requests_total.labels(
+                    endpoint=_endpoint_label(request.url.path),
+                    status="401",
+                ).inc()
+                log_event(
+                    "http_request",
+                    request_id=request_id,
+                    path=request.url.path,
+                    method=request.method,
+                    status=401,
+                    latency_ms=round(
+                        (time.perf_counter() - started) * 1000,
+                        3,
+                    ),
+                )
+                response.headers["X-Request-ID"] = request_id
+                return response
         try:
             response = await call_next(request)
         except Exception:
@@ -248,7 +273,12 @@ def create_app(
             ).observe(time.perf_counter() - started)
             return _openai_completion(selected, result, req.messages)
         except (OllamaError, ValueError) as exc:
-            _record_upstream_error(selected.gateway.chat_model, exc, started, False)
+            _record_upstream_error(
+                _error_model(exc, selected.gateway.chat_model),
+                exc,
+                started,
+                False,
+            )
             return _upstream_error_response(exc)
         finally:
             active_requests.labels(endpoint="openai_chat").dec()
@@ -292,7 +322,12 @@ def create_app(
                 "route": result.decision.route.value,
             }
         except (OllamaError, ValueError) as exc:
-            _record_upstream_error(selected.gateway.chat_model, exc, started, False)
+            _record_upstream_error(
+                _error_model(exc, selected.gateway.chat_model),
+                exc,
+                started,
+                False,
+            )
             return _upstream_error_response(exc)
         finally:
             active_requests.labels(endpoint="ollama_chat").dec()
@@ -318,13 +353,15 @@ def create_app(
                     "answer": result.upstream.get("message", {}).get("content", ""),
                 }
             )
-            response.headers["Deprecation"] = "true"
-            response.headers["Sunset"] = "2026-10-01"
-            response.headers["Link"] = '</v1/chat/completions>; rel="successor-version"'
-            return response
+            return _with_deprecation_headers(response)
         except (OllamaError, ValueError) as exc:
-            _record_upstream_error(selected.gateway.chat_model, exc, started, False)
-            return _upstream_error_response(exc)
+            _record_upstream_error(
+                _error_model(exc, selected.gateway.chat_model),
+                exc,
+                started,
+                False,
+            )
+            return _with_deprecation_headers(_upstream_error_response(exc))
         finally:
             active_requests.labels(endpoint="ask").dec()
 
@@ -358,7 +395,12 @@ async def _openai_stream_response(
         _record_decision(stream.decision)
     except (OllamaError, ValueError) as exc:
         active_requests.labels(endpoint="openai_chat").dec()
-        _record_upstream_error(settings.gateway.chat_model, exc, started, True)
+        _record_upstream_error(
+            _error_model(exc, settings.gateway.chat_model),
+            exc,
+            started,
+            True,
+        )
         return _upstream_error_response(exc)
 
     completion_id = f"chatcmpl-{uuid.uuid4().hex}"
@@ -440,6 +482,9 @@ async def _openai_stream_response(
                 }
             )
             yield "data: [DONE]\n\n"
+        except asyncio.CancelledError:
+            status = "cancelled"
+            raise
         except Exception as exc:
             status = "error"
             upstream_errors_total.labels(
@@ -452,14 +497,16 @@ async def _openai_stream_response(
             )
             yield "data: [DONE]\n\n"
         finally:
-            await stream.upstream.aclose()
-            streams_total.labels(protocol="openai", status=status).inc()
-            upstream_latency_seconds.labels(
-                model=stream.selected_model,
-                status=status,
-                stream="true",
-            ).observe(time.perf_counter() - started)
-            active_requests.labels(endpoint="openai_chat").dec()
+            try:
+                await stream.upstream.aclose()
+            finally:
+                streams_total.labels(protocol="openai", status=status).inc()
+                upstream_latency_seconds.labels(
+                    model=stream.selected_model,
+                    status=status,
+                    stream="true",
+                ).observe(time.perf_counter() - started)
+                active_requests.labels(endpoint="openai_chat").dec()
 
     return StreamingResponse(
         events(),
@@ -492,7 +539,12 @@ async def _ollama_stream_response(
         _record_decision(stream.decision)
     except (OllamaError, ValueError) as exc:
         active_requests.labels(endpoint="ollama_chat").dec()
-        _record_upstream_error("unknown", exc, started, True)
+        _record_upstream_error(
+            _error_model(exc, "unknown"),
+            exc,
+            started,
+            True,
+        )
         return _upstream_error_response(exc)
 
     async def lines() -> AsyncIterator[str]:
@@ -506,8 +558,13 @@ async def _ollama_stream_response(
                         raise OllamaError(str(data["error"]))
                     saw_done = saw_done or bool(data.get("done"))
                     yield f"{line}\n"
+                    if data.get("done"):
+                        break
             if not saw_done:
                 raise OllamaError("Upstream stream ended before a done event")
+        except asyncio.CancelledError:
+            status = "cancelled"
+            raise
         except Exception as exc:
             status = "error"
             upstream_errors_total.labels(
@@ -522,14 +579,16 @@ async def _ollama_stream_response(
                 }
             ) + "\n"
         finally:
-            await stream.upstream.aclose()
-            streams_total.labels(protocol="ollama", status=status).inc()
-            upstream_latency_seconds.labels(
-                model=stream.selected_model,
-                status=status,
-                stream="true",
-            ).observe(time.perf_counter() - started)
-            active_requests.labels(endpoint="ollama_chat").dec()
+            try:
+                await stream.upstream.aclose()
+            finally:
+                streams_total.labels(protocol="ollama", status=status).inc()
+                upstream_latency_seconds.labels(
+                    model=stream.selected_model,
+                    status=status,
+                    stream="true",
+                ).observe(time.perf_counter() - started)
+                active_requests.labels(endpoint="ollama_chat").dec()
 
     return StreamingResponse(
         lines(),
@@ -647,6 +706,20 @@ def _record_upstream_error(
         status="error",
         stream=str(stream).lower(),
     ).observe(time.perf_counter() - started)
+
+
+def _error_model(exc: Exception, fallback: str) -> str:
+    selected = getattr(exc, "selected_model", None)
+    return str(selected) if selected else fallback
+
+
+def _with_deprecation_headers(response: JSONResponse) -> JSONResponse:
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "Thu, 01 Oct 2026 00:00:00 GMT"
+    response.headers["Link"] = (
+        '</v1/chat/completions>; rel="successor-version"'
+    )
+    return response
 
 
 def _upstream_error_response(exc: Exception) -> JSONResponse:
