@@ -5,6 +5,8 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+build/
+dist/
 
 .venv/
 .venv*/
@@ -15,8 +17,33 @@ router/logs/
 memory/
 backups/
 artifacts/
+config/rule_shadow.json
+config/rule_candidates/
+config/rule_history/
 data/feedback*.jsonl
 data/review_queue.jsonl
+
+# Local research history retained outside the public v1 release tree.
+data/router_cases.jsonl
+data/router_dev_v2.jsonl
+data/router_dev_v2.manifest.json
+data/router_dev_v3.jsonl
+data/router_dev_v3.manifest.json
+data/router_dev_v3_candidates.jsonl
+data/router_locked_test_v2.jsonl
+data/router_locked_test_v2.manifest.json
+data/router_locked_test_v3.jsonl
+data/router_locked_test_v3.manifest.json
+data/router_regression_v1.jsonl
+data/router_regression_v1.manifest.json
+data/router_round2_candidates.jsonl
+scripts/generate_locked_test_v2.py
+scripts/generate_locked_test_v3.py
+scripts/generate_locked_test_v4.py
+scripts/generate_seed_dataset.py
+scripts/prepare_dev_v3.py
+scripts/prepare_dev_v4.py
+scripts/prepare_round2_dataset.py
 
 router/rule_candidates.yaml
 router/rule_missing.jsonl

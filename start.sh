@@ -25,6 +25,9 @@ setup)
 serve)
     exec "$PYTHON_BIN" -m router --config "${AI_ROUTER_CONFIG:-config/router.yaml}" serve
     ;;
+review)
+    exec "$PYTHON_BIN" -m router --config "${AI_ROUTER_CONFIG:-config/router.yaml}" review
+    ;;
 doctor)
     exec "$PYTHON_BIN" -m router --config "${AI_ROUTER_CONFIG:-config/router.yaml}" doctor
     ;;
@@ -36,11 +39,15 @@ benchmark)
     shift
     exec "$PYTHON_BIN" -m router --config "${AI_ROUTER_CONFIG:-config/router.yaml}" benchmark "$@"
     ;;
+rules)
+    shift
+    exec "$PYTHON_BIN" -m router --config "${AI_ROUTER_CONFIG:-config/router.yaml}" rules "$@"
+    ;;
 test)
     exec "$PYTHON_BIN" -m pytest
     ;;
 *)
-    echo "Usage: bash start.sh [setup|serve|doctor|evaluate|benchmark|test]"
+    echo "Usage: bash start.sh [setup|serve|review|doctor|evaluate|benchmark|rules|test]"
     exit 2
     ;;
 esac

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -100,7 +102,16 @@ class RuleEngine:
     def __init__(self, path: Path):
         with path.open("r", encoding="utf-8") as handle:
             loaded = yaml.safe_load(handle) or {}
-        self.rule_file = RuleFile.model_validate(loaded)
+        self._initialize(RuleFile.model_validate(loaded))
+
+    @classmethod
+    def from_rule_file(cls, rule_file: RuleFile) -> "RuleEngine":
+        engine = cls.__new__(cls)
+        engine._initialize(rule_file)
+        return engine
+
+    def _initialize(self, rule_file: RuleFile) -> None:
+        self.rule_file = rule_file
         self.rules = [
             CompiledRule(spec) for spec in self.rule_file.rules if spec.enabled
         ]
@@ -108,6 +119,16 @@ class RuleEngine:
     @property
     def version(self) -> str:
         return self.rule_file.version
+
+    @property
+    def digest(self) -> str:
+        payload = json.dumps(
+            self.rule_file.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()
 
     def evaluate(self, text: str) -> RuleEvidence:
         hard_hits: list[RuleHit] = []

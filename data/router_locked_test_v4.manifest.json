@@ -1,0 +1,74 @@
+{
+  "dataset_id": "router-locked-test-v4",
+  "purpose": "locked_test",
+  "status": "exposed_passed",
+  "data_file": "router_locked_test_v4.jsonl",
+  "case_count": 90,
+  "routes": {
+    "chat": 30,
+    "code": 30,
+    "reason": 30
+  },
+  "languages": {
+    "en": 27,
+    "mixed": 9,
+    "zh": 54
+  },
+  "verified": 90,
+  "pending": 0,
+  "rejected": 0,
+  "reviewed_by": "K",
+  "review_completed_at": "2026-07-27T14:36:08.697161+00:00",
+  "frozen_at": "2026-07-27T14:36:42Z",
+  "sha256": "c1aa6996e793829e00323b93e88f70799cf27e5be29757fb5987c39d9968f1b4",
+  "draft_sha256": "9032f875beebf891370047e0e3603db8e72a3ae91ee00edc92193e28e155617e",
+  "candidate_receipt": {
+    "classifier_model": "qwen2.5:0.5b",
+    "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+    "classifier_version": "1.0.0",
+    "prompt_version": "classifier-v11",
+    "classifier_source_sha256": "d5d9ca1c2dabb7ec9b7079816767f9feb8124b869e8539ca8919a3c1f29db54d",
+    "rule_version": "1.15.0",
+    "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
+    "rules_file_sha256": "1e53a24d2661bf69686c051ddbaf207b93232def63f456a9bf2f06ac3c283a3a",
+    "dev_dataset_id": "router-dev-v4",
+    "dev_sha256": "df800a0c2aea9d531d997c6463110b6893531c107f0abb2731fb55688d5c6651",
+    "benchmark_artifact_sha256": "20fdc8ed17d7a7c70a154bab0511b6c6561c377f12d4bf778d267bf1c86793f8"
+  },
+  "evaluation_receipt": {
+    "evaluated_at": "2026-07-27T14:37:58Z",
+    "evaluation_artifact": "../artifacts/final-locked-test-v4.json",
+    "evaluation_artifact_sha256": "8bcbfe55435106b374442314d5fbf853c615592fdea402f40b784508a278478d",
+    "classifier_model": "qwen2.5:0.5b",
+    "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+    "classifier_version": "1.0.0",
+    "prompt_version": "classifier-v11",
+    "classifier_source_sha256": "d5d9ca1c2dabb7ec9b7079816767f9feb8124b869e8539ca8919a3c1f29db54d",
+    "rule_version": "1.15.0",
+    "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
+    "macro_f1": 0.9889,
+    "per_class_recall": {
+      "code": 1.0,
+      "reason": 0.9667,
+      "chat": 1.0
+    },
+    "hard_rule_precision": 1.0,
+    "hard_rule_coverage": 0.1778,
+    "critical_slice_accuracy": {
+      "prompt_injection": 1.0,
+      "context_reference": 0.9167,
+      "rule_conflict": 1.0,
+      "technical_nontechnical": 1.0,
+      "implementation_after_analysis": 1.0
+    },
+    "hard_rule_p95_ms": 1.456,
+    "small_model_p95_ms": 1075.672,
+    "format_error_rate": 0.0,
+    "misclassified_case_ids": [
+      "v4-reason-022"
+    ],
+    "quality_gate_passed": true,
+    "calibration_written": true,
+    "calibration_sha256": "943e822c9261840083a54e8fea2871ecb3cc8d46034f9d3d8f57ba835056dbf8"
+  }
+}

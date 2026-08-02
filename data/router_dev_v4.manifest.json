@@ -1,0 +1,68 @@
+{
+  "dataset_id": "router-dev-v4",
+  "purpose": "development",
+  "status": "reviewed_frozen",
+  "data_file": "router_dev_v4.jsonl",
+  "case_count": 329,
+  "routes": {
+    "code": 111,
+    "reason": 108,
+    "chat": 110
+  },
+  "languages": {
+    "zh": 180,
+    "en": 102,
+    "mixed": 47
+  },
+  "verified": 329,
+  "pending": 0,
+  "rejected": 0,
+  "reviewed_by": "K",
+  "review_completed_at": "2026-07-27T14:08:00.288580+00:00",
+  "frozen_at": "2026-07-27T14:08:58Z",
+  "sha256": "df800a0c2aea9d531d997c6463110b6893531c107f0abb2731fb55688d5c6651",
+  "draft_sha256": "d64f6341b7cd7249955f5d0369291d1020b546dcf04d2c6c38745270ec8407b8",
+  "migrated_exposed_failures": 5,
+  "new_human_candidates": 30,
+  "source_receipts": {
+    "dev_v3_sha256": "739ea661c0012fe41f297c7af40c0314c69180f548ab33f8778d353562bcb7d9",
+    "locked_v3_sha256": "f5a407ee2d91f6ca9ebb10faef598d8c9b2252796db5c6d89e588213677b8c5b",
+    "locked_v3_evaluation_artifact_sha256": "29e8581a29ea352325905ba99a3fb5d9317162fe862b811eb300eb60270b0e34"
+  },
+  "benchmark_receipt": {
+    "benchmarked_at": "2026-07-27T14:26:15Z",
+    "classifier_model": "qwen2.5:0.5b",
+    "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+    "classifier_version": "1.0.0",
+    "prompt_version": "classifier-v11",
+    "classifier_source_sha256": "d5d9ca1c2dabb7ec9b7079816767f9feb8124b869e8539ca8919a3c1f29db54d",
+    "rule_version": "1.15.0",
+    "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
+    "rules_file_sha256": "1e53a24d2661bf69686c051ddbaf207b93232def63f456a9bf2f06ac3c283a3a",
+    "benchmark_artifact": "../artifacts/benchmark-round6-prompt-v11-rules1.15.json",
+    "benchmark_artifact_sha256": "20fdc8ed17d7a7c70a154bab0511b6c6561c377f12d4bf778d267bf1c86793f8",
+    "macro_f1": 0.997,
+    "cross_validation_macro_f1_mean": 0.997,
+    "cross_validation_macro_f1_stddev": 0.0061,
+    "per_class_recall": {
+      "code": 0.991,
+      "reason": 1.0,
+      "chat": 1.0
+    },
+    "critical_slice_accuracy": {
+      "prompt_injection": 1.0,
+      "context_reference": 1.0,
+      "rule_conflict": 1.0,
+      "technical_nontechnical": 1.0,
+      "implementation_after_analysis": 1.0
+    },
+    "hard_rule_precision": 1.0,
+    "hard_rule_coverage": 0.3191,
+    "hard_rule_p95_ms": 0.524,
+    "small_model_p95_ms": 516.025,
+    "format_error_rate": 0.0,
+    "migrated_locked_v3_failure_accuracy": 1.0,
+    "new_v4_candidate_accuracy": 1.0,
+    "quality_gate_passed": true
+  }
+}

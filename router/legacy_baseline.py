@@ -23,7 +23,10 @@ class LegacyBaselineClassifier:
     def __init__(self, settings: Settings, ollama: OllamaClient):
         self.settings = settings
         self.ollama = ollama
-        path = Path(__file__).resolve().parent.parent / "legacy/router_v1/rules.yaml"
+        path = (
+            Path(__file__).resolve().parent.parent
+            / "config/legacy_baseline_rules.yaml"
+        )
         self.rules = yaml.safe_load(path.read_text(encoding="utf-8"))
 
     async def classify(

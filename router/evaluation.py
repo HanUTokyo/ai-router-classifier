@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from collections import Counter, defaultdict
@@ -41,20 +42,47 @@ def load_cases(
     allow_unverified: bool = False,
 ) -> list[EvaluationCase]:
     cases: list[EvaluationCase] = []
+    seen_ids: set[str] = set()
+    seen_content: set[str] = set()
     with path.open("r", encoding="utf-8") as handle:
         for line_number, raw in enumerate(handle, 1):
             if not raw.strip():
                 continue
             try:
                 item = json.loads(raw)
+                verified = item.get("verified", False)
+                if not isinstance(verified, bool):
+                    raise TypeError("verified must be a JSON boolean")
+                case_id = str(item["id"])
+                if case_id in seen_ids:
+                    raise ValueError(f"duplicate case id {case_id!r}")
+                seen_ids.add(case_id)
+                content_fingerprint = json.dumps(
+                    {
+                        "text": str(item["text"]).strip(),
+                        "context": item.get("context", []),
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                )
+                if content_fingerprint in seen_content:
+                    raise ValueError("duplicate text/context case")
+                seen_content.add(content_fingerprint)
+                review_result = item.get("review_result")
+                if review_result not in {None, "correct", "incorrect"}:
+                    raise ValueError("invalid review_result")
+                if review_result == "correct" and not verified:
+                    raise ValueError("correct review must be verified")
+                if review_result == "incorrect" and verified:
+                    raise ValueError("incorrect review cannot be verified")
                 case = EvaluationCase(
-                    id=str(item["id"]),
+                    id=case_id,
                     text=str(item["text"]),
                     expected_route=RouteLabel(item["expected_route"]),
                     language=str(item["language"]),
                     split=str(item["split"]),
                     tags=tuple(str(tag) for tag in item.get("tags", [])),
-                    verified=bool(item.get("verified", False)),
+                    verified=verified,
                     context=tuple(
                         Message.model_validate(message)
                         for message in item.get("context", [])
@@ -184,6 +212,22 @@ def score_predictions(predictions: list[Prediction]) -> dict[str, Any]:
         classifier_errors["ClassifierOutputError"],
         model_attempts,
     )
+    tag_accuracy = {
+        tag: round(_safe_div(sum(values), len(values)), 4)
+        for tag, values in sorted(tag_counts.items())
+    }
+    critical_slices = (
+        "prompt_injection",
+        "context_reference",
+        "rule_conflict",
+        "technical_nontechnical",
+        "implementation_after_analysis",
+    )
+    critical_slice_accuracy = {
+        tag: tag_accuracy[tag]
+        for tag in critical_slices
+        if tag in tag_accuracy
+    }
     quality_gate = {
         "macro_f1_at_least_0_92": macro_f1 >= 0.92,
         "each_class_recall_at_least_0_88": all(
@@ -200,8 +244,15 @@ def score_predictions(predictions: list[Prediction]) -> dict[str, Any]:
             and small_model_path_latency["p95"] <= 2000
         ),
         "format_error_rate_below_0_005": format_error_rate < 0.005,
+        "critical_slice_accuracy_at_least_0_80": all(
+            accuracy >= 0.80
+            for accuracy in critical_slice_accuracy.values()
+        ),
     }
     quality_gate["passed"] = all(quality_gate.values())
+    weak_fallback_count = source_counts["weak_rule_fallback"]
+    default_fallback_count = source_counts["default_fallback"]
+    fallback_count = weak_fallback_count + default_fallback_count
 
     return {
         "cases": len(predictions),
@@ -214,6 +265,12 @@ def score_predictions(predictions: list[Prediction]) -> dict[str, Any]:
             "precision": round(hard_precision, 4),
         },
         "degraded_rate": round(_safe_div(degraded, len(predictions)), 4),
+        "fallback": {
+            "count": fallback_count,
+            "rate": round(_safe_div(fallback_count, len(predictions)), 4),
+            "weak_rule_count": weak_fallback_count,
+            "default_count": default_fallback_count,
+        },
         "source_counts": dict(sorted(source_counts.items())),
         "latency_ms": {
             "p50": round(median(latencies_sorted), 3),
@@ -231,17 +288,19 @@ def score_predictions(predictions: list[Prediction]) -> dict[str, Any]:
             "format_error_rate": round(format_error_rate, 4),
             "by_type": dict(sorted(classifier_errors.items())),
         },
-        "tag_accuracy": {
-            tag: round(_safe_div(sum(values), len(values)), 4)
-            for tag, values in sorted(tag_counts.items())
-        },
+        "tag_accuracy": tag_accuracy,
+        "critical_slice_accuracy": critical_slice_accuracy,
         "misclassified_cases": misclassified_cases[:100],
         "conflict_samples": conflict_samples[:100],
         "quality_gate": quality_gate,
     }
 
 
-def build_calibration(predictions: list[Prediction]) -> dict[str, Any]:
+def build_calibration(
+    predictions: list[Prediction],
+    *,
+    version: str = "gold-test-v1",
+) -> dict[str, Any]:
     totals: defaultdict[str, Counter[str]] = defaultdict(Counter)
     correct: defaultdict[str, Counter[str]] = defaultdict(Counter)
     for prediction in predictions:
@@ -259,12 +318,47 @@ def build_calibration(predictions: list[Prediction]) -> dict[str, Any]:
     hard_correct = sum(correct["hard_rule"].values())
     hard_precision = _safe_div(hard_correct, hard_total)
     return {
-        "version": "gold-test-v1",
+        "version": version,
         "validated": True,
         "hard_rules_enabled": hard_total > 0 and hard_precision >= 0.98,
         "hard_rule_precision": round(hard_precision, 4),
         "precision": precision,
     }
+
+
+def validate_locked_dataset_manifest(path: Path) -> dict[str, Any]:
+    manifest_path = path.with_suffix(".manifest.json")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Locked-test manifest is missing or invalid: {manifest_path}"
+        ) from exc
+    required = {
+        "dataset_id",
+        "purpose",
+        "status",
+        "data_file",
+        "case_count",
+        "sha256",
+    }
+    missing = sorted(required - set(manifest))
+    if missing:
+        raise ValueError(f"Locked-test manifest is missing fields: {missing}")
+    if manifest["purpose"] != "locked_test" or manifest["status"] != "frozen":
+        raise ValueError(
+            "Calibration requires purpose=locked_test and status=frozen"
+        )
+    if manifest["data_file"] != path.name:
+        raise ValueError("Locked-test manifest points to a different data file")
+    raw = path.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    if manifest["sha256"] != digest:
+        raise ValueError("Locked-test dataset hash does not match its manifest")
+    case_count = sum(bool(line.strip()) for line in raw.splitlines())
+    if manifest["case_count"] != case_count:
+        raise ValueError("Locked-test case count does not match its manifest")
+    return manifest
 
 
 def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:

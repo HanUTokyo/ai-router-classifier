@@ -10,6 +10,11 @@ from fastapi.testclient import TestClient
 
 from router.app import create_app
 from router.ollama import OllamaUnavailable
+from router.rules import RuleEngine
+from router.settings import Settings
+
+
+DEFAULT_CLASSIFIER_MODEL = Settings.load().classifier.model
 
 
 def mock_transport(
@@ -18,6 +23,7 @@ def mock_transport(
     timeout_answer: bool = False,
     incomplete_stream: bool = False,
     missing_classifier: bool = False,
+    classifier_model: str = DEFAULT_CLASSIFIER_MODEL,
 ):
     calls: list[dict] = []
 
@@ -29,7 +35,7 @@ def mock_transport(
                 "deepseek-coder:6.7b",
             ]
             if not missing_classifier:
-                models.append("qwen2.5:0.5b")
+                models.append(classifier_model)
             return httpx.Response(
                 200,
                 json={
@@ -41,7 +47,7 @@ def mock_transport(
             )
         payload = json.loads(request.content)
         calls.append(payload)
-        if payload["model"] == "qwen2.5:0.5b":
+        if payload.get("format", {}).get("properties", {}).get("route"):
             assert payload["think"] is False
             return httpx.Response(
                 200,
@@ -86,7 +92,7 @@ def test_route_and_openai_non_stream(settings):
     assert route.json()["route"] == "chat"
     assert completion.status_code == 200
     assert completion.json()["choices"][0]["message"]["content"] == "Hello"
-    assert calls[-1]["model"] == "gemma4:e4b"
+    assert calls[-1]["model"] == settings.gateway.chat_model
 
 
 def test_blank_route_message_is_rejected(settings):
@@ -271,6 +277,15 @@ def test_feedback_is_secure_and_responses_api_is_explicit(settings):
         schema = client.get("/openapi.json")
 
     assert feedback.status_code == 200
+    assert feedback.json()["rule_signal"] == "hard_rule_positive"
+    stored_feedback = json.loads(
+        settings.storage.feedback_path.read_text(encoding="utf-8").splitlines()[0]
+    )
+    assert stored_feedback["rule_version"] == RuleEngine(
+        settings.classifier.rules_path
+    ).version
+    assert stored_feedback["rule_signal"] == "hard_rule_positive"
+    assert stored_feedback["rule_hits"][0]["rule_id"] == "chat-greeting-en"
     assert unsupported.status_code == 501
     assert "/v1/responses" not in schema.json()["paths"]
     assert os.stat(settings.storage.feedback_path).st_mode & 0o777 == 0o600

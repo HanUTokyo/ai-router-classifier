@@ -30,10 +30,10 @@ classifier:
 gateway:
   public_model_id: "local-router"
   think: false
-  chat_model: "qwen2.5:0.5b"
-  reason_model: "qwen2.5:0.5b"
-  code_model: "qwen2.5:0.5b"
-  tool_model: "qwen2.5:0.5b"
+  chat_model: "gemma4:e4b"
+  reason_model: "deepseek-r1:8b"
+  code_model: "deepseek-coder:6.7b"
+  tool_model: "gemma4:e4b"
   tool_supported_models: []
 
 storage:

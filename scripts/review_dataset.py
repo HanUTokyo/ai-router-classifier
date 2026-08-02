@@ -15,7 +15,7 @@ LABEL_KEYS = {
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Review AI Router seed labels")
-    parser.add_argument("--dataset", default="data/router_cases.jsonl")
+    parser.add_argument("--dataset", default="data/router_dev_v4.jsonl")
     parser.add_argument("--reviewer", required=True)
     return parser.parse_args()
 

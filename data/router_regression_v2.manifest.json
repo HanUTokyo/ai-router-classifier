@@ -1,0 +1,19 @@
+{
+  "dataset_id": "router-regression-v2",
+  "purpose": "regression",
+  "status": "exposed",
+  "data_file": "router_regression_v2.jsonl",
+  "case_count": 270,
+  "routes": {
+    "code": 90,
+    "reason": 90,
+    "chat": 90
+  },
+  "verified": 270,
+  "sha256": "94eca97fc696ab0bd6b2fc54595ae334e49406434cee5baacf9405047330211b",
+  "source_receipts": {
+    "regression_v1_sha256": "72a81f7b7d23b8691be9361b075d0689ea91898b6d0387df8c9241d43da2fa3e",
+    "locked_v2_sha256": "222a34f540f4fb0cc02a719f9676000136ea2ec46086d8a57cfe4f46efcfe01a",
+    "locked_v3_sha256": "f5a407ee2d91f6ca9ebb10faef598d8c9b2252796db5c6d89e588213677b8c5b"
+  }
+}

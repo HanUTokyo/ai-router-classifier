@@ -39,6 +39,7 @@ class ClassifierSettings(FrozenModel):
     candidates: list[str] = Field(default_factory=list)
     prompt_version: str = "classifier-v1"
     rules_path: Path = Path("config/rules.yaml")
+    shadow_report_path: Path | None = Path("config/rule_shadow.json")
     calibration_path: Path = Path("config/calibration.json")
     weak_fallback_threshold: float = Field(default=2.0, ge=0)
     weak_fallback_margin: float = Field(default=0.75, ge=0)
@@ -59,6 +60,7 @@ class GatewaySettings(FrozenModel):
 class StorageSettings(FrozenModel):
     feedback_path: Path = Path("data/feedback.jsonl")
     review_queue_path: Path = Path("data/review_queue.jsonl")
+    review_dataset_path: Path = Path("data/router_dev_v4.jsonl")
     capture_review_text: bool = True
     memory_enabled: bool = False
     memory_path: Path = Path("data/memory.md")
@@ -98,6 +100,11 @@ class Settings(FrozenModel):
                 "classifier": settings.classifier.model_copy(
                     update={
                         "rules_path": _absolute(settings.classifier.rules_path),
+                        "shadow_report_path": (
+                            _absolute(settings.classifier.shadow_report_path)
+                            if settings.classifier.shadow_report_path is not None
+                            else None
+                        ),
                         "calibration_path": _absolute(settings.classifier.calibration_path),
                     }
                 ),
@@ -105,6 +112,9 @@ class Settings(FrozenModel):
                     update={
                         "feedback_path": _absolute(settings.storage.feedback_path),
                         "review_queue_path": _absolute(settings.storage.review_queue_path),
+                        "review_dataset_path": _absolute(
+                            settings.storage.review_dataset_path
+                        ),
                         "memory_path": _absolute(settings.storage.memory_path),
                     }
                 ),
@@ -153,6 +163,11 @@ def _apply_environment_overrides(raw: dict[str, Any]) -> None:
         "AI_ROUTER_API_KEY": ("server", "api_key", str),
         "AI_ROUTER_OLLAMA_BASE_URL": ("ollama", "base_url", str),
         "AI_ROUTER_CLASSIFIER_MODEL": ("classifier", "model", str),
+        "AI_ROUTER_SHADOW_RULE_REPORT": (
+            "classifier",
+            "shadow_report_path",
+            Path,
+        ),
         "AI_ROUTER_STRICT_MODEL_CHECK": (
             "classifier",
             "strict_model_check",
@@ -162,6 +177,11 @@ def _apply_environment_overrides(raw: dict[str, Any]) -> None:
         "AI_ROUTER_REASON_MODEL": ("gateway", "reason_model", str),
         "AI_ROUTER_CODE_MODEL": ("gateway", "code_model", str),
         "AI_ROUTER_TOOL_MODEL": ("gateway", "tool_model", str),
+        "AI_ROUTER_REVIEW_DATASET_PATH": (
+            "storage",
+            "review_dataset_path",
+            Path,
+        ),
         "AI_ROUTER_MEMORY_ENABLED": ("storage", "memory_enabled", _parse_bool),
     }
     for env_name, (section, key, converter) in mappings.items():

@@ -6,14 +6,14 @@ import json
 import time
 import uuid
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Literal
 
 import httpx
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .classifier import RouterClassifier
+from .classifier import RouterClassifier, normalize_classification_text
 from .gateway import GatewayResult, ThinGateway
 from .observability import (
     active_requests,
@@ -28,6 +28,12 @@ from .observability import (
     upstream_latency_seconds,
 )
 from .ollama import OllamaClient, OllamaError, OllamaTimeout
+from .review_ui import (
+    REVIEW_PAGE,
+    ReviewConflictError,
+    ReviewDatasetError,
+    ReviewDatasetStore,
+)
 from .settings import Settings
 from .storage import SecureJsonlStore, content_hash
 from .types import FeedbackRequest, Message, RouteRequest
@@ -68,6 +74,19 @@ class OllamaChatRequest(BaseModel):
     tools: list[dict[str, Any]] | None = None
 
 
+class ReviewSubmission(BaseModel):
+    result: Literal["correct", "incorrect"]
+    reviewer: str = Field(min_length=1, max_length=100)
+    revision: str = Field(min_length=16, max_length=64)
+
+    @field_validator("reviewer")
+    @classmethod
+    def require_reviewer(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("reviewer must not be blank")
+        return value.strip()
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -79,6 +98,7 @@ def create_app(
     classifier = RouterClassifier(selected, ollama)
     gateway = ThinGateway(selected, classifier, ollama)
     feedback_store = SecureJsonlStore(selected.storage.feedback_path)
+    review_store = ReviewDatasetStore(selected.storage.review_dataset_path)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -92,6 +112,7 @@ def create_app(
     app.state.ollama = ollama
     app.state.classifier = classifier
     app.state.gateway = gateway
+    app.state.review_store = review_store
 
     @app.middleware("http")
     async def security_and_request_log(request: Request, call_next):
@@ -181,6 +202,19 @@ def create_app(
                     classifier.calibrator.weak_fallback_enabled
                 ),
             },
+            "shadow_rules": {
+                "version": (
+                    classifier.shadow_rules.version
+                    if classifier.shadow_rules is not None
+                    else None
+                ),
+                "loaded": classifier.shadow_rules is not None,
+                "error": classifier.shadow_rules_error,
+            },
+            "rules": {
+                "version": classifier.rules.version,
+                "digest": classifier.rules.digest,
+            },
             "models": {
                 model: installed.get(model, "") for model in sorted(selected.required_models)
             },
@@ -195,6 +229,68 @@ def create_app(
         body, content_type = metrics_payload()
         return Response(content=body, headers={"Content-Type": content_type})
 
+    @app.get("/review", include_in_schema=False)
+    async def review_page():
+        return HTMLResponse(
+            REVIEW_PAGE,
+            headers={
+                "Cache-Control": "no-store",
+                "Content-Security-Policy": (
+                    "default-src 'self'; style-src 'unsafe-inline'; "
+                    "script-src 'unsafe-inline'; connect-src 'self'; "
+                    "img-src 'self' data:; frame-ancestors 'none'"
+                ),
+                "X-Frame-Options": "DENY",
+            },
+        )
+
+    @app.get("/review/api/state", include_in_schema=False)
+    async def review_state(
+        split: Literal["dev", "test"] = "dev",
+        after: str | None = None,
+    ):
+        try:
+            return review_store.state(split=split, after=after)
+        except ReviewDatasetError:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Review dataset is unavailable or invalid."},
+                headers={"Cache-Control": "no-store"},
+            )
+
+    @app.post("/review/api/cases/{case_id}", include_in_schema=False)
+    async def review_case(
+        case_id: str,
+        submission: ReviewSubmission,
+    ):
+        try:
+            split = review_store.record(
+                case_id=case_id,
+                result=submission.result,
+                reviewer=submission.reviewer,
+                revision=submission.revision,
+            )
+            state = review_store.state(split=split, after=case_id)
+            return JSONResponse(
+                content=state,
+                headers={"Cache-Control": "no-store"},
+            )
+        except KeyError:
+            return JSONResponse(
+                status_code=404,
+                content={"detail": "Review case was not found."},
+            )
+        except ReviewConflictError as exc:
+            return JSONResponse(
+                status_code=409,
+                content={"detail": str(exc)},
+            )
+        except ReviewDatasetError:
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Review dataset is unavailable or invalid."},
+            )
+
     @app.post("/route")
     async def route(req: RouteRequest):
         decision = await classifier.classify(req.message, req.context)
@@ -204,11 +300,25 @@ def create_app(
 
     @app.post("/route/feedback")
     async def route_feedback(req: FeedbackRequest, request: Request):
+        text = req.message.strip()
+        classification_text, _ = normalize_classification_text(text)
+        evidence = classifier.rules.evaluate(classification_text)
+        hard_label = evidence.unique_hard_label
+        if hard_label is not None and hard_label != req.expected_route:
+            rule_signal = "hard_rule_negative"
+        elif hard_label == req.expected_route:
+            rule_signal = "hard_rule_positive"
+        elif req.actual_route is not None and req.actual_route != req.expected_route:
+            rule_signal = "candidate_rule_gap"
+        else:
+            rule_signal = "human_label_only"
         feedback_store.append(
             {
                 "request_id": request.state.request_id,
-                "message": req.message.strip(),
-                "message_hash": content_hash(req.message.strip()),
+                "message": (
+                    text if selected.storage.capture_review_text else None
+                ),
+                "message_hash": content_hash(text),
                 "expected_route": req.expected_route.value,
                 "actual_route": (
                     req.actual_route.value if req.actual_route is not None else None
@@ -217,9 +327,19 @@ def create_app(
                 "comment": req.comment,
                 "verified": True,
                 "source": "manual_feedback",
+                "rule_signal": rule_signal,
+                "rule_hits": [
+                    hit.model_dump(mode="json")
+                    for hit in evidence.hard_hits + evidence.weak_hits
+                ],
+                "rule_version": classifier.rules.version,
+                "rule_digest": classifier.rules.digest,
+                "classifier_model": selected.classifier.model,
+                "classifier_version": selected.classifier.version,
+                "prompt_version": selected.classifier.prompt_version,
             }
         )
-        return {"ok": True, "stored": True}
+        return {"ok": True, "stored": True, "rule_signal": rule_signal}
 
     @app.get("/v1/models")
     async def models():
@@ -771,6 +891,8 @@ def _extract_api_key(request: Request) -> str | None:
 
 
 def _endpoint_label(path: str) -> str:
+    if path == "/review" or path.startswith("/review/api/"):
+        return "human_review"
     return {
         "/route": "route",
         "/route/feedback": "route_feedback",

@@ -10,9 +10,9 @@ code:
     - 开发
     - 函数
     - 数据库
+    - spring
   weight: 1.0
   confidence: 0.95
-
 reason:
   keywords:
     - 为什么
@@ -21,7 +21,6 @@ reason:
     - 推理
   weight: 0.7
   confidence: 0.8
-
 chat:
   short_text_len: 10
   confidence: 0.6

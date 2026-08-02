@@ -1,14 +1,32 @@
 {
-  "version": "unvalidated",
-  "validated": false,
-  "classifier_model": null,
-  "classifier_version": null,
-  "prompt_version": null,
-  "rule_version": null,
-  "hard_rules_enabled": false,
-  "hard_rule_precision": null,
-  "weak_fallback_enabled": false,
-  "weak_fallback_threshold": null,
-  "weak_fallback_margin": null,
-  "precision": {}
+  "version": "router-locked-test-v4",
+  "validated": true,
+  "hard_rules_enabled": true,
+  "hard_rule_precision": 1.0,
+  "precision": {
+    "small_model_rule_agree": {
+      "code": 1.0,
+      "reason": 1.0,
+      "chat": 1.0
+    },
+    "hard_rule": {
+      "code": 1.0,
+      "reason": 1.0
+    },
+    "small_model": {
+      "code": 1.0,
+      "reason": 1.0,
+      "chat": 0.9583
+    }
+  },
+  "classifier_model": "qwen2.5:0.5b",
+  "classifier_version": "1.0.0",
+  "prompt_version": "classifier-v11",
+  "rule_version": "1.15.0",
+  "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
+  "dataset_id": "router-locked-test-v4",
+  "dataset_sha256": "c1aa6996e793829e00323b93e88f70799cf27e5be29757fb5987c39d9968f1b4",
+  "weak_fallback_enabled": true,
+  "weak_fallback_threshold": 2.0,
+  "weak_fallback_margin": 0.75
 }
