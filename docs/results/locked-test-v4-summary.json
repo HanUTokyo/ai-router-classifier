@@ -1,0 +1,46 @@
+{
+  "release": "1.0.0",
+  "policy": "current",
+  "dataset": "router_locked_test_v4.jsonl",
+  "dataset_id": "router-locked-test-v4",
+  "dataset_sha256": "c1aa6996e793829e00323b93e88f70799cf27e5be29757fb5987c39d9968f1b4",
+  "status": "exposed_passed",
+  "verified": true,
+  "cases": 90,
+  "model": "qwen2.5:0.5b",
+  "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+  "classifier_version": "1.0.0",
+  "prompt_version": "classifier-v11",
+  "rule_version": "1.15.0",
+  "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
+  "metrics": {
+    "macro_f1": 0.9889,
+    "per_class_recall": {
+      "code": 1.0,
+      "reason": 0.9667,
+      "chat": 1.0
+    },
+    "hard_rule_precision": 1.0,
+    "hard_rule_coverage": 0.1778,
+    "hard_rule_p95_ms": 1.456,
+    "small_model_p95_ms": 1075.672,
+    "fallback": {
+      "count": 0,
+      "rate": 0.0,
+      "weak_rule_count": 0,
+      "default_count": 0
+    },
+    "format_error_rate": 0.0,
+    "critical_slice_accuracy": {
+      "prompt_injection": 1.0,
+      "context_reference": 0.9167,
+      "rule_conflict": 1.0,
+      "technical_nontechnical": 1.0,
+      "implementation_after_analysis": 1.0
+    },
+    "misclassified_case_ids": ["v4-reason-022"],
+    "quality_gate_passed": true
+  },
+  "source_evaluation_artifact_sha256": "8bcbfe55435106b374442314d5fbf853c615592fdea402f40b784508a278478d",
+  "recalibration_allowed": false
+}

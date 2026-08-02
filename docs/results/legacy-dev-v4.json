@@ -1,0 +1,1496 @@
+{
+  "model": "qwen2.5:0.5b",
+  "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+  "policy": "legacy",
+  "split": "dev",
+  "dataset": "router_dev_v4.jsonl",
+  "dataset_sha256": "df800a0c2aea9d531d997c6463110b6893531c107f0abb2731fb55688d5c6651",
+  "verified": true,
+  "classifier_version": "1.0.0",
+  "prompt_version": "classifier-v11",
+  "rule_version": "1.15.0",
+  "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
+  "metrics": {
+    "cases": 329,
+    "macro_f1": 0.2256,
+    "per_class": {
+      "code": {
+        "precision": 0.3355,
+        "recall": 0.9369,
+        "f1": 0.4941,
+        "support": 111
+      },
+      "reason": {
+        "precision": 0.5333,
+        "recall": 0.0741,
+        "f1": 0.1301,
+        "support": 108
+      },
+      "chat": {
+        "precision": 0.75,
+        "recall": 0.0273,
+        "f1": 0.0526,
+        "support": 110
+      }
+    },
+    "confusion_matrix": {
+      "code": {
+        "code": 104,
+        "reason": 6,
+        "chat": 1
+      },
+      "reason": {
+        "code": 100,
+        "reason": 8,
+        "chat": 0
+      },
+      "chat": {
+        "code": 106,
+        "reason": 1,
+        "chat": 3
+      }
+    },
+    "hard_rule": {
+      "coverage": 0.0,
+      "matches": 0,
+      "precision": 0.0
+    },
+    "degraded_rate": 0.0,
+    "fallback": {
+      "count": 0,
+      "rate": 0.0,
+      "weak_rule_count": 0,
+      "default_count": 0
+    },
+    "source_counts": {
+      "legacy_baseline": 329
+    },
+    "latency_ms": {
+      "p50": 287.95,
+      "p95": 358.669,
+      "max": 510.161
+    },
+    "path_latency_ms": {
+      "hard_rule": {
+        "count": 0,
+        "p50": null,
+        "p95": null,
+        "max": null
+      },
+      "small_model": {
+        "count": 329,
+        "p50": 287.95,
+        "p95": 358.669,
+        "max": 510.161
+      }
+    },
+    "classifier_errors": {
+      "attempted": 329,
+      "count": 0,
+      "rate": 0.0,
+      "format_error_rate": 0.0,
+      "by_type": {}
+    },
+    "tag_accuracy": {
+      "acronym_definition": 0.0,
+      "capitalization_edit": 0.0,
+      "causal_analysis": 0.25,
+      "context_reference": 0.4211,
+      "dev_v3": 0.4375,
+      "dev_v3_candidate": 0.25,
+      "dev_v4": 0.4,
+      "dev_v4_candidate": 0.4,
+      "en": 0.3824,
+      "exposed_locked_v2_failure": 0.4375,
+      "exposed_locked_v3_failure": 0.4,
+      "false_positive": 0.0,
+      "implementation_after_analysis": 0.8,
+      "locked_v2": 0.4375,
+      "locked_v3": 0.4,
+      "logic": 0.0,
+      "mixed": 0.4468,
+      "prompt_injection": 0.2,
+      "round2": 0.2778,
+      "rule_conflict": 0.5652,
+      "seed": 0.3619,
+      "short": 0.2075,
+      "simple_factual_why": 0.0,
+      "spelling_edit": 0.0,
+      "technical_implementation": 1.0,
+      "technical_nontechnical": 0.0938,
+      "technical_reasoning": 0.3636,
+      "text_edit": 0.0,
+      "zh": 0.3056
+    },
+    "critical_slice_accuracy": {
+      "prompt_injection": 0.2,
+      "context_reference": 0.4211,
+      "rule_conflict": 0.5652,
+      "technical_nontechnical": 0.0938,
+      "implementation_after_analysis": 0.8
+    },
+    "misclassified_cases": [
+      {
+        "id": "reason-019",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "prompt_injection"
+        ]
+      },
+      {
+        "id": "reason-020",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-021",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-022",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-023",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-024",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-025",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-026",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-027",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-028",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-029",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-030",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-031",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-032",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-033",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-034",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-035",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-036",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-037",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-038",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-039",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-040",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-041",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-042",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-043",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-044",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-045",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-046",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-047",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-048",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-049",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-050",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-052",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-053",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-054",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-055",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-056",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "reason-057",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-058",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-059",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "reason-060",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-070",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en",
+          "context_reference"
+        ]
+      },
+      {
+        "id": "reason-072",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-073",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-074",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-075",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-076",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-077",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-078",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-079",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-080",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-081",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-082",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-083",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-084",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-085",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-086",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-087",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-088",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-089",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-090",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en"
+        ]
+      },
+      {
+        "id": "reason-094",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed",
+          "rule_conflict",
+          "technical_nontechnical"
+        ]
+      },
+      {
+        "id": "reason-096",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed"
+        ]
+      },
+      {
+        "id": "reason-097",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-098",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "reason-099",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed"
+        ]
+      },
+      {
+        "id": "reason-100",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed"
+        ]
+      },
+      {
+        "id": "chat-019",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "technical_nontechnical"
+        ]
+      },
+      {
+        "id": "chat-020",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-021",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-022",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-023",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-024",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "chat-025",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-026",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-027",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "chat-028",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-029",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh"
+        ]
+      },
+      {
+        "id": "chat-030",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "chat-031",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-032",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-033",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-034",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-035",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-036",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "chat-037",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-038",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-039",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-040",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-041",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-042",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "chat-043",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-044",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-045",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-046",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-047",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-048",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "false_positive"
+        ]
+      },
+      {
+        "id": "chat-049",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-050",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      },
+      {
+        "id": "chat-051",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "zh",
+          "short"
+        ]
+      }
+    ],
+    "conflict_samples": [
+      {
+        "id": "code-070",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "en",
+          "rule_conflict"
+        ],
+        "correct": true
+      },
+      {
+        "id": "reason-094",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "seed",
+          "mixed",
+          "rule_conflict",
+          "technical_nontechnical"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-code-001",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "zh",
+          "rule_conflict"
+        ],
+        "correct": true
+      },
+      {
+        "id": "r2-rc-code-002",
+        "expected": "code",
+        "predicted": "reason",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "en",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-code-003",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "mixed",
+          "rule_conflict"
+        ],
+        "correct": true
+      },
+      {
+        "id": "r2-rc-reason-001",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "zh",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-reason-002",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "en",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-reason-003",
+        "expected": "reason",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "mixed",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-chat-001",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "zh",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-chat-002",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "en",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "r2-rc-chat-003",
+        "expected": "chat",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "round2",
+          "zh",
+          "rule_conflict"
+        ],
+        "correct": false
+      },
+      {
+        "id": "v3-failure-v2-code-012",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "locked_v2",
+          "zh",
+          "rule_conflict",
+          "dev_v3",
+          "exposed_locked_v2_failure"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v3-failure-v2-code-024",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "locked_v2",
+          "en",
+          "rule_conflict",
+          "dev_v3",
+          "exposed_locked_v2_failure"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v3-failure-v2-code-030",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "locked_v2",
+          "mixed",
+          "rule_conflict",
+          "dev_v3",
+          "exposed_locked_v2_failure"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v3-candidate-code-001",
+        "expected": "code",
+        "predicted": "reason",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v3_candidate",
+          "zh",
+          "rule_conflict",
+          "implementation_after_analysis"
+        ],
+        "correct": false
+      },
+      {
+        "id": "v3-candidate-code-005",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v3_candidate",
+          "en",
+          "rule_conflict",
+          "implementation_after_analysis"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v3-candidate-code-008",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v3_candidate",
+          "mixed",
+          "rule_conflict",
+          "implementation_after_analysis"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v4-failure-v3-code-024",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "locked_v3",
+          "en",
+          "implementation_after_analysis",
+          "rule_conflict",
+          "dev_v4",
+          "exposed_locked_v3_failure"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v4-failure-v3-code-030",
+        "expected": "code",
+        "predicted": "reason",
+        "source": "legacy_baseline",
+        "tags": [
+          "locked_v3",
+          "mixed",
+          "implementation_after_analysis",
+          "rule_conflict",
+          "dev_v4",
+          "exposed_locked_v3_failure"
+        ],
+        "correct": false
+      },
+      {
+        "id": "v4-candidate-code-001",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v4_candidate",
+          "en",
+          "implementation_after_analysis",
+          "rule_conflict"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v4-candidate-code-003",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v4_candidate",
+          "en",
+          "implementation_after_analysis",
+          "rule_conflict"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v4-candidate-code-004",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v4_candidate",
+          "mixed",
+          "implementation_after_analysis",
+          "rule_conflict"
+        ],
+        "correct": true
+      },
+      {
+        "id": "v4-candidate-code-005",
+        "expected": "code",
+        "predicted": "code",
+        "source": "legacy_baseline",
+        "tags": [
+          "dev_v4_candidate",
+          "mixed",
+          "implementation_after_analysis",
+          "rule_conflict"
+        ],
+        "correct": true
+      }
+    ],
+    "quality_gate": {
+      "macro_f1_at_least_0_92": false,
+      "each_class_recall_at_least_0_88": false,
+      "hard_rule_precision_at_least_0_98": false,
+      "hard_rule_p95_below_10ms": false,
+      "small_model_p95_at_most_2000ms": true,
+      "format_error_rate_below_0_005": true,
+      "critical_slice_accuracy_at_least_0_80": false,
+      "passed": false
+    }
+  }
+}
