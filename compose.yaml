@@ -1,0 +1,47 @@
+services:
+  ollama:
+    image: ollama/ollama:0.32.3
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  model-init:
+    image: ollama/ollama:0.32.3
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama pull qwen2.5:0.5b"]
+    restart: "no"
+
+  router:
+    build: .
+    depends_on:
+      model-init:
+        condition: service_completed_successfully
+    environment:
+      AI_ROUTER_BIND_HOST: 0.0.0.0
+      AI_ROUTER_API_KEY: ${AI_ROUTER_API_KEY:-local-demo-key}
+      AI_ROUTER_OLLAMA_BASE_URL: http://ollama:11434
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  ollama_data:
