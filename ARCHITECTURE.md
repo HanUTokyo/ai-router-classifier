@@ -24,10 +24,16 @@ Client
                                       Ollama answer model
 ```
 
-The classifier and gateway share one FastAPI process. Ollama is the only remote
-runtime dependency. The classifier does not perform retrieval, call tools,
-read memory, or execute tasks. Future orchestration belongs after
-`RouteDecision`, not inside the classification core.
+The classifier, gateway, and local review UI share one FastAPI process. Their
+code boundaries are explicit: `router/api/inference.py` owns public inference
+and compatibility routes, `router/api/control.py` owns feedback/review routes,
+`router/api/health.py` owns readiness and metrics, and `router/app.py` only
+assembles dependencies, lifespan, middleware, and routers. `RuntimeServices`
+passes dependencies into router factories instead of relying on module globals.
+
+Ollama is the only remote runtime dependency. The classifier does not perform
+retrieval, call tools, read memory, or execute tasks. Future orchestration
+belongs after `RouteDecision`, not inside the classification core.
 
 ## Online decision flow
 
@@ -45,6 +51,22 @@ read memory, or execute tasks. Future orchestration belongs after
 
 `confidence` is empirical source/label precision from the accepted locked test.
 It is not a model logit or a request-specific probability.
+
+## Content-addressed classifier identity
+
+Prompt assets live outside the orchestration code in `router/prompts/`.
+`router/prompting.py` strictly validates their schema at startup and builds the
+same ordered message payload used for classification. A canonical SHA-256 digest
+covers the system prompt, three ordered few-shot groups, structured-output JSON
+schema, retry instruction, and generation options. YAML formatting changes do
+not affect the digest; semantic content or order changes do.
+
+The calibration receipt binds that prompt digest to the active rule digest and
+the installed Ollama model digest. Startup and evaluation query the installed
+model identity before calibration can activate. In strict mode, a missing or
+mismatched model prevents startup. In non-strict mode, the service remains
+available but hard-rule short circuits stay disabled and decisions explicitly
+report degraded behavior.
 
 ## Control and data planes
 
@@ -107,13 +129,15 @@ backend interfaces before adding provider-specific branches.
 The project supports the common Chat Completions and Ollama Chat paths, but not
 the Responses API or every OpenAI option. Usage accounting is estimated.
 
-## Known architectural risk
+## Residual architectural risks
 
-Rules are content-addressed, while prompt/few-shot content and installed model
-digests are represented by versioned receipts but not fully enforced as one
-runtime artifact digest. Tightening that identity check changes the accepted
-classifier artifact and therefore belongs in a later release with a new locked
-test.
+- Review/control and inference code have separate dependency boundaries but
+  remain co-located in one process and security boundary.
+- Runtime JSONL stores are process-local and unsuitable for multi-writer
+  horizontal scaling.
+- The receipt binds prompt, rule, and model content. Changes elsewhere in the
+  Python classification policy still rely on reviewed version discipline and
+  require a new private locked test before recalibration.
 
 For a detailed Chinese code walkthrough, see
 [docs/architecture.zh-CN.md](docs/architecture.zh-CN.md).

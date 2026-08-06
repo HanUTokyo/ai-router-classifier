@@ -11,6 +11,8 @@
   "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
   "classifier_version": "1.0.0",
   "prompt_version": "classifier-v11",
+  "identity_schema": "classifier-artifact-v1",
+  "prompt_digest": "2dfbd18d869acea540d4d1d73c07a3061fe3fb551e570b9a5d112e5180911a6f",
   "rule_version": "1.15.0",
   "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
   "metrics": {
@@ -40,6 +42,11 @@
     },
     "misclassified_case_ids": ["v4-reason-022"],
     "quality_gate_passed": true
+  },
+  "identity_migration": {
+    "locked_test_rerun": false,
+    "original_calibration_sha256": "943e822c9261840083a54e8fea2871ecb3cc8d46034f9d3d8f57ba835056dbf8",
+    "locked_classifier_source_sha256": "d5d9ca1c2dabb7ec9b7079816767f9feb8124b869e8539ca8919a3c1f29db54d"
   },
   "source_evaluation_artifact_sha256": "8bcbfe55435106b374442314d5fbf853c615592fdea402f40b784508a278478d",
   "recalibration_allowed": false

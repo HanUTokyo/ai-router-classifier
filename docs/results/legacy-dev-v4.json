@@ -8,6 +8,7 @@
   "verified": true,
   "classifier_version": "1.0.0",
   "prompt_version": "classifier-v11",
+  "prompt_digest": "c04ef9e4714a786cd5197eeb2ea1e21b04c853e0dc0988b4f70019aaeda96c05",
   "rule_version": "1.15.0",
   "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
   "metrics": {

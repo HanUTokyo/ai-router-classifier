@@ -109,8 +109,8 @@ and successor-version headers. New clients should use `/v1/chat/completions`.
 ## Health and metrics
 
 - `GET /health/live` confirms that the process is running.
-- `GET /health/ready` verifies required models and reports calibration, rules,
-  shadow rules, and installed model digests.
+- `GET /health/ready` verifies required models and reports calibration identity,
+  prompt digest, expected/installed model digests, rules, and shadow rules.
 - `GET /health` is an alias of readiness.
 - `GET /metrics` returns Prometheus exposition format.
 - `GET /v1/models` exposes the logical public model ID.
