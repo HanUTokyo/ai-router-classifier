@@ -212,6 +212,27 @@ def test_metrics_exposes_prometheus_content_type(settings):
     assert "router_http_requests_total" in response.text
 
 
+def test_http_planes_preserve_public_schema_and_runtime_boundaries(settings):
+    transport, _ = mock_transport()
+    app = create_app(settings, transport=transport)
+
+    assert set(app.openapi()["paths"]) == {
+        "/api/chat",
+        "/ask",
+        "/health",
+        "/health/live",
+        "/health/ready",
+        "/metrics",
+        "/route",
+        "/route/feedback",
+        "/v1/chat/completions",
+        "/v1/models",
+    }
+    assert app.state.services.classifier is app.state.classifier
+    assert app.state.services.gateway is app.state.gateway
+    assert app.state.services.review_store is app.state.review_store
+
+
 def test_openai_stream_terminates(settings):
     transport, _ = mock_transport()
     app = create_app(settings, transport=transport)
