@@ -8,6 +8,7 @@ import yaml
 from router.classifier import RouterClassifier, normalize_classification_text
 from router.legacy_baseline import LegacyBaselineClassifier
 from router.ollama import OllamaTimeout, OllamaUnavailable
+from router.prompting import PROMPT_DIGEST
 from router.rule_lifecycle import (
     RuleChange,
     evaluate_rule_change,
@@ -16,6 +17,17 @@ from router.rule_lifecycle import (
 from router.rules import RuleEngine
 from router.rules import RuleSpec
 from router.types import Message, RouteLabel, RouteSource
+
+
+TEST_MODEL_DIGEST = "test-model-digest"
+
+
+def identity_fields() -> dict[str, str]:
+    return {
+        "identity_schema": "classifier-artifact-v1",
+        "prompt_digest": PROMPT_DIGEST,
+        "model_digest": TEST_MODEL_DIGEST,
+    }
 
 
 class FakeOllama:
@@ -36,6 +48,7 @@ async def test_calibrated_hard_rule_short_circuits_small_model(settings):
     settings.classifier.calibration_path.write_text(
         json.dumps(
             {
+                **identity_fields(),
                 "version": "test",
                 "validated": True,
                 "classifier_model": settings.classifier.model,
@@ -61,6 +74,7 @@ async def test_calibrated_hard_rule_short_circuits_small_model(settings):
     )
     ollama = FakeOllama(route=RouteLabel.CHAT)
     classifier = RouterClassifier(settings, ollama)
+    classifier.bind_model_digest(TEST_MODEL_DIGEST)
 
     result = await classifier.classify("请帮我修复这段 Python 代码")
 
@@ -87,6 +101,7 @@ async def test_calibration_is_invalidated_when_model_metadata_drifts(settings):
     settings.classifier.calibration_path.write_text(
         json.dumps(
             {
+                **identity_fields(),
                 "version": "test",
                 "validated": True,
                 "classifier_model": "different-model",
@@ -111,12 +126,78 @@ async def test_calibration_is_invalidated_when_model_metadata_drifts(settings):
     )
     ollama = FakeOllama(route=RouteLabel.CHAT)
     classifier = RouterClassifier(settings, ollama)
+    classifier.bind_model_digest(TEST_MODEL_DIGEST)
 
     result = await classifier.classify("请帮我修复这段 Python 代码")
 
     assert result.source == RouteSource.SMALL_MODEL
     assert result.confidence is None
     assert len(ollama.calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_calibration_is_invalidated_when_prompt_digest_drifts(settings):
+    rules = RuleEngine(settings.classifier.rules_path)
+    payload = {
+        **identity_fields(),
+        "prompt_digest": "different-prompt-digest",
+        "version": "test",
+        "validated": True,
+        "classifier_model": settings.classifier.model,
+        "classifier_version": settings.classifier.version,
+        "prompt_version": settings.classifier.prompt_version,
+        "rule_version": rules.version,
+        "rule_digest": rules.digest,
+        "weak_fallback_threshold": settings.classifier.weak_fallback_threshold,
+        "weak_fallback_margin": settings.classifier.weak_fallback_margin,
+        "hard_rules_enabled": True,
+        "weak_fallback_enabled": True,
+        "precision": {"hard_rule": {"code": 1.0}},
+    }
+    settings.classifier.calibration_path.write_text(
+        json.dumps(payload), encoding="utf-8"
+    )
+    ollama = FakeOllama(route=RouteLabel.CHAT)
+    classifier = RouterClassifier(settings, ollama)
+    classifier.bind_model_digest(TEST_MODEL_DIGEST)
+
+    result = await classifier.classify("请帮我修复这段 Python 代码")
+
+    assert classifier.calibrator.metadata_matches is False
+    assert result.source == RouteSource.SMALL_MODEL
+    assert result.confidence is None
+
+
+@pytest.mark.asyncio
+async def test_calibration_is_invalidated_when_installed_digest_drifts(settings):
+    rules = RuleEngine(settings.classifier.rules_path)
+    payload = {
+        **identity_fields(),
+        "version": "test",
+        "validated": True,
+        "classifier_model": settings.classifier.model,
+        "classifier_version": settings.classifier.version,
+        "prompt_version": settings.classifier.prompt_version,
+        "rule_version": rules.version,
+        "rule_digest": rules.digest,
+        "weak_fallback_threshold": settings.classifier.weak_fallback_threshold,
+        "weak_fallback_margin": settings.classifier.weak_fallback_margin,
+        "hard_rules_enabled": True,
+        "weak_fallback_enabled": True,
+        "precision": {"hard_rule": {"code": 1.0}},
+    }
+    settings.classifier.calibration_path.write_text(
+        json.dumps(payload), encoding="utf-8"
+    )
+    ollama = FakeOllama(route=RouteLabel.CHAT)
+    classifier = RouterClassifier(settings, ollama)
+    classifier.bind_model_digest("different-model-digest")
+
+    result = await classifier.classify("请帮我修复这段 Python 代码")
+
+    assert classifier.calibrator.model_digest_matches is False
+    assert result.source == RouteSource.SMALL_MODEL
+    assert result.confidence is None
 
 
 @pytest.mark.asyncio
@@ -127,6 +208,7 @@ async def test_calibration_is_invalidated_when_rule_content_reuses_version(
     settings.classifier.calibration_path.write_text(
         json.dumps(
             {
+                **identity_fields(),
                 "version": "test",
                 "validated": True,
                 "classifier_model": settings.classifier.model,
@@ -158,6 +240,7 @@ async def test_calibration_is_invalidated_when_rule_content_reuses_version(
         ollama,
         rule_engine=RuleEngine(changed_path),
     )
+    classifier.bind_model_digest(TEST_MODEL_DIGEST)
 
     result = await classifier.classify("请帮我修复这段 Python 代码")
 
@@ -187,6 +270,7 @@ async def test_model_failure_uses_calibrated_weak_threshold(settings):
     settings.classifier.calibration_path.write_text(
         json.dumps(
             {
+                **identity_fields(),
                 "version": "test",
                 "validated": True,
                 "classifier_model": settings.classifier.model,
@@ -211,6 +295,7 @@ async def test_model_failure_uses_calibrated_weak_threshold(settings):
     )
     ollama = FakeOllama(error=OllamaUnavailable("offline"))
     classifier = RouterClassifier(settings, ollama)
+    classifier.bind_model_digest(TEST_MODEL_DIGEST)
 
     result = await classifier.classify("部署 Python 数据库单元测试")
 

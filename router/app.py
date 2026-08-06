@@ -27,7 +27,7 @@ from .observability import (
     upstream_errors_total,
     upstream_latency_seconds,
 )
-from .ollama import OllamaClient, OllamaError, OllamaTimeout
+from .ollama import OllamaClient, OllamaError, OllamaTimeout, OllamaUnavailable
 from .review_ui import (
     REVIEW_PAGE,
     ReviewConflictError,
@@ -103,7 +103,20 @@ def create_app(
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         if selected.classifier.strict_model_check:
-            await ollama.ensure_models(selected.required_models)
+            installed = await ollama.ensure_models(selected.required_models)
+            if not classifier.bind_model_digest(
+                installed.get(selected.classifier.model)
+            ):
+                raise OllamaUnavailable(
+                    "Installed classifier model digest does not match the "
+                    "accepted calibration receipt"
+                )
+        else:
+            try:
+                installed = await ollama.installed_models()
+            except OllamaError:
+                installed = {}
+            classifier.bind_model_digest(installed.get(selected.classifier.model))
         yield
         await ollama.close()
 
@@ -182,6 +195,14 @@ def create_app(
     async def health_ready():
         try:
             installed = await ollama.ensure_models(selected.required_models)
+            identity_valid = classifier.bind_model_digest(
+                installed.get(selected.classifier.model)
+            )
+            if selected.classifier.strict_model_check and not identity_valid:
+                raise OllamaUnavailable(
+                    "Installed classifier model digest does not match the "
+                    "accepted calibration receipt"
+                )
         except OllamaError as exc:
             return JSONResponse(
                 status_code=503,
@@ -197,6 +218,14 @@ def create_app(
             "calibration": {
                 "version": classifier.calibrator.version,
                 "validated": classifier.calibrator.validated,
+                "identity_valid": classifier.calibrator.identity_valid,
+                "prompt_digest": classifier.prompt_digest,
+                "expected_model_digest": (
+                    classifier.calibrator.expected_model_digest
+                ),
+                "installed_model_digest": (
+                    classifier.calibrator.installed_model_digest
+                ),
                 "hard_rules_enabled": classifier.calibrator.hard_rules_enabled,
                 "weak_fallback_enabled": (
                     classifier.calibrator.weak_fallback_enabled

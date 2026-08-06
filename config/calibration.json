@@ -20,13 +20,23 @@
     }
   },
   "classifier_model": "qwen2.5:0.5b",
+  "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
   "classifier_version": "1.0.0",
   "prompt_version": "classifier-v11",
+  "identity_schema": "classifier-artifact-v1",
+  "prompt_digest": "2dfbd18d869acea540d4d1d73c07a3061fe3fb551e570b9a5d112e5180911a6f",
   "rule_version": "1.15.0",
   "rule_digest": "b4126bb7e9456bbfadec45a2462d6f709b6bbddae92fef92af5583cb254f2578",
   "dataset_id": "router-locked-test-v4",
   "dataset_sha256": "c1aa6996e793829e00323b93e88f70799cf27e5be29757fb5987c39d9968f1b4",
   "weak_fallback_enabled": true,
   "weak_fallback_threshold": 2.0,
-  "weak_fallback_margin": 0.75
+  "weak_fallback_margin": 0.75,
+  "migration": {
+    "kind": "content_identity_hardening",
+    "original_calibration_sha256": "943e822c9261840083a54e8fea2871ecb3cc8d46034f9d3d8f57ba835056dbf8",
+    "locked_classifier_source_sha256": "d5d9ca1c2dabb7ec9b7079816767f9feb8124b869e8539ca8919a3c1f29db54d",
+    "locked_dataset_id": "router-locked-test-v4",
+    "reason": "Prompt assets were extracted without semantic changes; the exposed locked test was not rerun."
+  }
 }

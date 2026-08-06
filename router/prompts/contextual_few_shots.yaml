@@ -1,0 +1,31 @@
+contextual:
+  - task: "Can you revise this one so it keeps empty values?"
+    context:
+      - {role: user, content: "The TypeScript serializer drops keys with empty-string values."}
+      - {role: assistant, content: "The filter treats empty strings as missing values."}
+    route: code
+  - task: "这个应该怎么改，才能避免重复扣款？"
+    context:
+      - {role: user, content: "支付服务的 Python 重试逻辑会在超时后再次扣款。"}
+      - {role: assistant, content: "需要检查幂等键与事务边界。"}
+    route: code
+  - task: "Can you analyze that further?"
+    context:
+      - {role: user, content: "Why did inflation reduce household savings?"}
+      - {role: assistant, content: "Several causal mechanisms may be involved."}
+    route: reason
+  - task: "Tell me more about it."
+    context:
+      - {role: user, content: "What flowers bloom in spring?"}
+      - {role: assistant, content: "Tulips and daffodils are common examples."}
+    route: chat
+  - task: "接下来 how should I update it？"
+    context:
+      - {role: user, content: "这条 SQL aggregation 会把同一个订单统计两次。"}
+      - {role: assistant, content: "连接条件可能把订单明细展开了。"}
+    route: code
+  - task: "继续 compare 哪个 explanation 更符合 earlier evidence。"
+    context:
+      - {role: user, content: "销量下降可能来自涨价，也可能来自缺货。"}
+      - {role: assistant, content: "缺货发生在销量下降之前。"}
+    route: reason

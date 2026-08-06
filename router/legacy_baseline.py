@@ -7,6 +7,7 @@ import yaml
 
 from .classifier import SYSTEM_PROMPT
 from .ollama import OllamaClient, OllamaError
+from .prompting import LEGACY_PROMPT_DIGEST
 from .settings import Settings
 from .types import (
     Message,
@@ -23,6 +24,7 @@ class LegacyBaselineClassifier:
     def __init__(self, settings: Settings, ollama: OllamaClient):
         self.settings = settings
         self.ollama = ollama
+        self.prompt_digest = LEGACY_PROMPT_DIGEST
         path = (
             Path(__file__).resolve().parent.parent
             / "config/legacy_baseline_rules.yaml"

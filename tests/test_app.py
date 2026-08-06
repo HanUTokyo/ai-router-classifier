@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from router.app import create_app
 from router.ollama import OllamaUnavailable
+from router.prompting import PROMPT_DIGEST
 from router.rules import RuleEngine
 from router.settings import Settings
 
@@ -24,6 +25,7 @@ def mock_transport(
     incomplete_stream: bool = False,
     missing_classifier: bool = False,
     classifier_model: str = DEFAULT_CLASSIFIER_MODEL,
+    classifier_digest: str | None = None,
 ):
     calls: list[dict] = []
 
@@ -40,7 +42,15 @@ def mock_transport(
                 200,
                 json={
                     "models": [
-                        {"name": model, "digest": f"digest-{index}"}
+                        {
+                            "name": model,
+                            "digest": (
+                                classifier_digest
+                                if model == classifier_model
+                                and classifier_digest is not None
+                                else f"digest-{index}"
+                            ),
+                        }
                         for index, model in enumerate(models)
                     ]
                 },
@@ -133,6 +143,35 @@ def test_startup_refuses_missing_required_model(settings):
     with pytest.raises(OllamaUnavailable, match="not installed"):
         with TestClient(app):
             pass
+
+
+def test_strict_startup_refuses_classifier_digest_mismatch():
+    transport, _ = mock_transport(classifier_digest="different-digest")
+    app = create_app(Settings.load(), transport=transport)
+
+    with pytest.raises(OllamaUnavailable, match="digest does not match"):
+        with TestClient(app):
+            pass
+
+
+def test_ready_exposes_content_addressed_classifier_identity():
+    settings = Settings.load()
+    expected = json.loads(
+        settings.classifier.calibration_path.read_text(encoding="utf-8")
+    )["model_digest"]
+    transport, _ = mock_transport(classifier_digest=expected)
+    app = create_app(settings, transport=transport)
+
+    with TestClient(app) as client:
+        response = client.get("/health/ready")
+
+    assert response.status_code == 200
+    calibration = response.json()["calibration"]
+    assert calibration["validated"] is True
+    assert calibration["identity_valid"] is True
+    assert calibration["prompt_digest"] == PROMPT_DIGEST
+    assert calibration["expected_model_digest"] == expected
+    assert calibration["installed_model_digest"] == expected
 
 
 def test_api_key_protects_non_health_endpoints(settings):

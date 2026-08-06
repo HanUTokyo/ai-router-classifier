@@ -253,6 +253,7 @@ def _run_rule_command(args, settings) -> None:
 
 async def _run_async(args, settings) -> None:
     from .benchmark import benchmark_candidates
+    from .calibration import IDENTITY_SCHEMA
     from .classifier import RouterClassifier
     from .evaluation import (
         build_calibration,
@@ -262,7 +263,7 @@ async def _run_async(args, settings) -> None:
         validate_locked_dataset_manifest,
         write_json_atomic,
     )
-    from .ollama import OllamaClient
+    from .ollama import OllamaClient, OllamaUnavailable
 
     ollama = OllamaClient(settings.ollama)
     classifier = RouterClassifier(
@@ -271,8 +272,20 @@ async def _run_async(args, settings) -> None:
         activate_provisional_hard_rules=args.command in {"evaluate", "benchmark"},
     )
     try:
+        installed = await ollama.installed_models()
+        identity_valid = classifier.bind_model_digest(
+            installed.get(settings.classifier.model)
+        )
+        if (
+            settings.classifier.strict_model_check
+            and settings.classifier.model in installed
+            and not identity_valid
+        ):
+            raise OllamaUnavailable(
+                "Installed classifier model digest does not match the "
+                "accepted calibration receipt"
+            )
         if args.command == "doctor":
-            installed = await ollama.installed_models()
             missing = sorted(settings.required_models - set(installed))
             print(
                 json.dumps(
@@ -283,6 +296,14 @@ async def _run_async(args, settings) -> None:
                         "calibration": {
                             "version": classifier.calibrator.version,
                             "validated": classifier.calibrator.validated,
+                            "identity_valid": classifier.calibrator.identity_valid,
+                            "prompt_digest": classifier.prompt_digest,
+                            "expected_model_digest": (
+                                classifier.calibrator.expected_model_digest
+                            ),
+                            "installed_model_digest": (
+                                classifier.calibrator.installed_model_digest
+                            ),
                             "hard_rules_enabled": (
                                 classifier.calibrator.hard_rules_enabled
                             ),
@@ -303,13 +324,13 @@ async def _run_async(args, settings) -> None:
                         },
                         "installed": installed,
                         "missing_required": missing,
-                        "ready": not missing,
+                        "ready": not missing and identity_valid,
                     },
                     ensure_ascii=False,
                     indent=2,
                 )
             )
-            raise SystemExit(1 if missing else 0)
+            raise SystemExit(1 if missing or not identity_valid else 0)
 
         cases = load_cases(
             Path(args.dataset),
@@ -338,7 +359,6 @@ async def _run_async(args, settings) -> None:
             )
             metrics = score_predictions(predictions)
             model_name = args.model or settings.classifier.model
-            installed = await ollama.installed_models()
             dataset_path = Path(args.dataset)
             result = {
                 "model": model_name,
@@ -352,6 +372,7 @@ async def _run_async(args, settings) -> None:
                 "verified": all(case.verified for case in cases),
                 "classifier_version": settings.classifier.version,
                 "prompt_version": settings.classifier.prompt_version,
+                "prompt_digest": selected_classifier.prompt_digest,
                 "rule_version": classifier.rules.version,
                 "rule_digest": classifier.rules.digest,
                 "metrics": metrics,
@@ -389,6 +410,11 @@ async def _run_async(args, settings) -> None:
                             ),
                             "classifier_version": settings.classifier.version,
                             "prompt_version": settings.classifier.prompt_version,
+                            "identity_schema": IDENTITY_SCHEMA,
+                            "prompt_digest": classifier.prompt_digest,
+                            "model_digest": installed.get(
+                                args.model or settings.classifier.model
+                            ),
                             "rule_version": classifier.rules.version,
                             "rule_digest": classifier.rules.digest,
                             "dataset_id": locked_manifest["dataset_id"],
@@ -416,7 +442,6 @@ async def _run_async(args, settings) -> None:
                 raise SystemExit(2)
             return
 
-        installed = await ollama.installed_models()
         result = await benchmark_candidates(
             classifier,
             cases,
