@@ -5,6 +5,11 @@ from typing import Any
 
 import httpx
 
+from .prompting import (
+    CLASSIFIER_GENERATION_OPTIONS,
+    CLASSIFIER_OUTPUT_SCHEMA,
+    CLASSIFIER_RETRY_PROMPT,
+)
 from .settings import OllamaSettings
 from .types import RouteLabel, SmallModelOutput
 
@@ -100,10 +105,7 @@ class OllamaClient:
                 messages.append(
                     {
                         "role": "user",
-                        "content": (
-                            "Your previous output was invalid. Return only the required "
-                            'JSON object, for example {"route":"chat"}.'
-                        ),
+                        "content": CLASSIFIER_RETRY_PROMPT,
                     }
                 )
             payload = {
@@ -111,21 +113,8 @@ class OllamaClient:
                 "messages": messages,
                 "stream": False,
                 "think": False,
-                "format": {
-                    "type": "object",
-                    "properties": {
-                        "route": {
-                            "type": "string",
-                            "enum": ["code", "reason", "chat"],
-                        }
-                    },
-                    "required": ["route"],
-                    "additionalProperties": False,
-                },
-                "options": {
-                    "temperature": 0,
-                    "num_predict": 48,
-                },
+                "format": CLASSIFIER_OUTPUT_SCHEMA,
+                "options": CLASSIFIER_GENERATION_OPTIONS,
             }
             try:
                 data = await self._post_json("/api/chat", payload)

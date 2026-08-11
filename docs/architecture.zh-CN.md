@@ -52,8 +52,9 @@ flowchart LR
 
 | 层 | 主要模块 | 职责 |
 |---|---|---|
-| 接入与协议层 | `router/app.py` | HTTP API、鉴权、健康检查、OpenAI/Ollama 协议适配、流式响应、错误码 |
-| 路由决策层 | `router/classifier.py`、`router/rules.py` | 文本归一化、规则证据、小模型分类、校准、降级与影子差异记录 |
+| 应用装配层 | `router/app.py`、`router/api/runtime.py` | lifespan、安全中间件、显式依赖容器与 router 装配 |
+| HTTP 分区层 | `router/api/inference.py`、`control.py`、`health.py` | 推理/兼容协议、反馈/审核、健康检查/指标，保持单进程部署 |
+| 路由决策层 | `router/classifier.py`、`router/rules.py`、`router/prompting.py`、`router/normalization.py`、`router/calibration.py` | Prompt 工件、归一化、规则证据、小模型分类、校准、降级与影子差异记录 |
 | 模型访问与转发层 | `router/gateway.py`、`router/ollama.py` | 路由到回答模型、工具模型覆盖、Ollama HTTP 调用与流式连接 |
 | 数据与可观测层 | `router/storage.py`、`router/observability.py`、`router/review_ui.py` | JSONL 存储、显式记忆、Prometheus 指标、结构化日志、人工复核 |
 | 离线治理层 | `router/evaluation.py`、`router/benchmark.py`、`router/rule_lifecycle.py`、`router/cli.py` | 数据校验、质量门禁、候选模型比较、校准写入、规则发布与回滚 |
@@ -80,9 +81,13 @@ Settings
   └─ ReviewDatasetStore
 ```
 
+这些对象被封装为不可变的 `RuntimeServices`，显式传入 inference、control 和 health
+三个 router factory；各 HTTP 模块不创建模块级服务全局变量。这样在不增加新端口、
+新容器或部署复杂度的前提下，先形成了推理面与审核/控制面的代码依赖边界。
+
 当 `strict_model_check=true` 时，FastAPI lifespan 会在服务接受流量前检查所有配置
-模型是否已安装。规则、校准和影子报告也在对象初始化时加载，因此相关文件变化需
-重启进程后生效。
+模型是否已安装，并把实际 Ollama digest 与校准收据绑定。规则、Prompt digest、
+校准和影子报告也在对象初始化时加载，因此相关文件变化需重启进程后生效。
 
 ### 3.2 API 面
 
@@ -329,32 +334,27 @@ Gateway 需显式使用 `config/router.full.yaml`。
    的显式弃用路径。
 7. **隐私默认值较稳健。** 内容日志和记忆默认关闭，文件权限和本地绑定都有保护。
 
-## 9. 当前主要风险与技术债
+## 9. 已完成整改与剩余技术债
 
-### P0：校准身份还没有完全内容寻址
+### 已完成：分类工件内容寻址
 
-规则由内容摘要绑定，但 Prompt 只绑定 `prompt_version` 字符串，分类模型只绑定模型
-名称，没有把 Prompt 内容摘要和 Ollama 模型 digest 写入校准匹配条件。若代码内
-Prompt/Few-shot 被修改却忘记升级版本，或同名模型内容变化，旧校准仍可能被认为
-有效。建议把 system prompt、few-shot 集合、归一化策略和模型 digest 一并计算为
-不可变的 classifier artifact digest，并作为校准强校验字段。
+system prompt 与三组有序 few-shot 已迁移到 `router/prompts/`。loader 在启动时拒绝
+未知字段、非法 route/role、空 task 和重复样本。canonical SHA-256 基于解析后的
+结构化内容计算，覆盖 system prompt、few-shot 顺序、结构化输出 schema、retry
+instruction 和分类生成参数，因此 YAML 排版变化不会改变 digest，语义或顺序变化
+一定会改变 digest。
 
-### P1：在线主模块职责偏重
+校准收据同时绑定 rule digest、prompt digest 和实际安装的 Ollama model digest。
+strict 模式下模型缺失或 digest 漂移会阻止启动；non-strict 模式仍可启动，但校准
+保持无效、hard rule 不短路，并通过 `degraded` 明示状态。
 
-`router/app.py` 同时承担依赖装配、鉴权、中间件、业务 API、兼容协议、两套流式
-转换、错误映射和审核接口；`router/classifier.py` 同时包含 Prompt 资产、文本净化、
-上下文策略、决策编排、校准、影子规则和复核写入。两者已经分别超过 900 行和
-700 行，继续扩展协议或路由类别时会提高回归风险。
+### 已完成：主模块职责分区
 
-建议逐步拆分为：
-
-- `api/routes/route.py`、`api/routes/openai.py`、`api/routes/ollama.py`、
-  `api/routes/review.py`；
-- `api/streaming/openai.py`、`api/streaming/ollama.py`；
-- `classifier/prompt.py`、`classifier/context.py`、`classifier/calibration.py`、
-  `classifier/service.py`。
-
-拆分时保持现有 `RouteDecision` 和测试契约不变，可以低风险渐进迁移。
+`router/classifier.py` 现在只保留规则、小模型、fallback 和最终决策编排；Prompt
+构建、归一化与校准分别位于 `prompting.py`、`normalization.py` 和 `calibration.py`。
+`router/app.py` 只负责装配，HTTP 行为分别进入 `router/api/inference.py`、
+`control.py` 与 `health.py`。原有 `RouteDecision`、路径、鉴权、错误码、SSE/NDJSON
+和 OpenAPI 可见性由行为测试锁定。
 
 ### P1：本地文件存储限制了多进程和水平扩展
 
@@ -381,10 +381,10 @@ Prompt/Few-shot 被修改却忘记升级版本，或同名模型内容变化，�
 
 ### P2：控制面与数据面共进程
 
-人工审核 UI、反馈收集、规则影子加载和对外推理 API 当前共用一个 FastAPI 进程。
-本地场景简单有效，但生产化后会让权限、容量和发布节奏耦合。建议在需要多人审核或
-高并发前，将 review/rule administration 拆为控制面服务，在线 Router 只读取已
-签名或摘要校验过的只读工件。
+人工审核 UI、反馈收集和对外推理 API 已在代码层通过 router factory 与显式服务容器
+隔离，但仍共用一个 FastAPI 进程。本地场景简单有效；生产化后，权限、容量或发布
+节奏出现独立需求时，应把 review/rule administration 拆为控制面服务，在线 Router
+只读取已签名或摘要校验过的只读工件。
 
 ### P2：兼容协议仍有近似行为
 
@@ -395,16 +395,12 @@ OpenAI `usage` 通过字符数除以四估算，不是真实 tokenizer 计数；
 
 ## 10. 建议的演进顺序
 
-1. **补齐分类工件摘要。** 先解决 Prompt/Few-shot 和模型 digest 未进入校准身份
-   的问题，这是直接影响路由正确性的风险。
-2. **冻结领域契约后拆分大模块。** 保持 `RouteRequest`、`RouteDecision` 和现有
-   HTTP 契约，先拆流式协议和 Prompt/校准代码。
-3. **抽象模型后端。** 在引入第二种提供商之前建立接口，避免在业务层增加条件分支。
-4. **把控制面与数据面逻辑分层。** 即使暂时仍同进程，也应先在包结构和依赖方向上
-   隔离审核、规则管理与在线请求。
-5. **按部署需求升级状态层。** 只有真正需要多 worker、多实例或多人并发审核时，
+1. **抽象模型后端。** 在引入第二种提供商之前建立接口，避免在业务层增加条件分支。
+2. **按真实部署需求拆服务边界。** 当前代码层已经隔离控制面与推理面；只有出现
+   多人审核、独立扩缩容或不同权限域时，再拆进程和端口。
+3. **按部署需求升级状态层。** 只有真正需要多 worker、多实例或多人并发审核时，
    再将 JSONL 迁移到数据库，避免过早增加运维复杂度。
-6. **扩展路由标签前先扩展评测契约。** 新增如 tool、vision、long-context 等路由
+4. **扩展路由标签前先扩展评测契约。** 新增如 tool、vision、long-context 等路由
    时，应同步定义标签语义、模型映射、关键切片、降级顺序和新锁定测试集。
 
 目标形态可以保持当前核心思想不变：
@@ -429,12 +425,13 @@ OpenAI `usage` 通过字符数除以四估算，不是真实 tokenizer 计数；
 1. `router/types.py`：先理解领域对象和决策来源。
 2. `router/settings.py`、`config/router.yaml`：理解运行配置和模型映射。
 3. `router/rules.py`：理解规则如何编译和产生证据。
-4. `router/classifier.py`：理解完整分类决策链。
-5. `router/gateway.py`、`router/ollama.py`：理解回答模型选择和上游访问。
-6. `router/app.py`：理解 API、鉴权、流式协议和错误语义。
-7. `router/evaluation.py`、`router/benchmark.py`：理解质量指标与校准。
-8. `router/rule_lifecycle.py`：理解候选规则的影子、发布和回滚。
-9. `router/review_ui.py`、`router/storage.py`：理解人工审核和本地状态。
+4. `router/prompts/`、`router/prompting.py`、`router/calibration.py`：理解分类工件身份。
+5. `router/classifier.py`：理解完整分类决策编排。
+6. `router/gateway.py`、`router/ollama.py`：理解回答模型选择和上游访问。
+7. `router/api/`、`router/app.py`：理解 HTTP 分区、鉴权、流式协议和装配。
+8. `router/evaluation.py`、`router/benchmark.py`：理解质量指标与校准。
+9. `router/rule_lifecycle.py`：理解候选规则的影子、发布和回滚。
+10. `router/review_ui.py`、`router/storage.py`：理解人工审核和本地状态。
 
 更精简的架构不变量见 `ARCHITECTURE.md`，规则操作手册见
 `RULE_LIFECYCLE.md`，已执行的验证与质量结果见 `VALIDATION.md`。

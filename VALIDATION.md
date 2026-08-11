@@ -8,6 +8,7 @@ The public v1 classifier is frozen as:
 qwen2.5:0.5b
 classifier version 1.0.0
 prompt classifier-v11
+prompt digest 2dfbd18d869acea540d4d1d73c07a3061fe3fb551e570b9a5d112e5180911a6f
 rules 1.15.0
 calibration router-locked-test-v4
 ```
@@ -89,4 +90,7 @@ bash start.sh evaluate \
 ```
 
 Latency varies by hardware and cold-start state. Accuracy should be compared
-only when the model digest, dataset hash, prompt version, and rule digest match.
+only when the model digest, dataset hash, prompt digest, and rule digest match.
+The public locked test was not rerun during the content-identity migration; its
+receipt records the original calibration and classifier-source hashes used to
+prove the prompt extraction was semantic-preserving.

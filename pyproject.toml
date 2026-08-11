@@ -30,6 +30,9 @@ ai-router = "router.cli:main"
 [tool.setuptools.packages.find]
 include = ["router*"]
 
+[tool.setuptools.package-data]
+router = ["prompts/*.txt", "prompts/*.yaml"]
+
 [tool.pytest.ini_options]
 addopts = "-q"
 asyncio_mode = "auto"
