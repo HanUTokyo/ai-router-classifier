@@ -32,7 +32,7 @@ gateway:
   think: false
   chat_model: "gemma4:e4b"
   reason_model: "deepseek-r1:8b"
-  code_model: "deepseek-coder:6.7b"
+  code_model: "qwen3.5:9b"
   tool_model: "gemma4:e4b"
   tool_supported_models: []
 

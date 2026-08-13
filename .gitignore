@@ -59,4 +59,5 @@ legacy/router_v1/training_data.jsonl
 .env
 .env.*
 !.env.example
+.router-lan.key
 .codex

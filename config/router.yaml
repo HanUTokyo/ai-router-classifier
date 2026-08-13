@@ -32,7 +32,7 @@ gateway:
   think: false
   chat_model: "qwen2.5:0.5b"
   reason_model: "qwen2.5:0.5b"
-  code_model: "qwen2.5:0.5b"
+  code_model: "qwen3.5:9b"
   tool_model: "qwen2.5:0.5b"
   tool_supported_models: []
 

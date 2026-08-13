@@ -34,7 +34,7 @@ def mock_transport(
             models = [
                 "gemma4:e4b",
                 "deepseek-r1:8b",
-                "deepseek-coder:6.7b",
+                "qwen3.5:9b",
             ]
             if not missing_classifier:
                 models.append(classifier_model)
